@@ -4,10 +4,79 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <vector>
 #include <iostream>
 using namespace cv;
 
 static boost::mutex mutex;
+
+void myFloodFill(Mat* img, int* b, int c, int r){
+    uchar h = img->at<Vec3b>(r,c)[0];
+    if(h == 45) return;
+    if(100 > h || h > 130) return;
+    img->at<Vec3b>(r,c)[0] = 45;
+
+    if(c < b[0]) b[0] = c;
+    if(c > b[1]) b[1] = c;
+    if(r < b[2]) b[2] = r;
+    if(r > b[3]) b[3] = r;
+
+    myFloodFill(img, b, c + 1, r);
+    myFloodFill(img, b, c - 1, r);
+    myFloodFill(img, b, c    , r + 1);
+    myFloodFill(img, b, c    , r - 1);
+    return;
+}
+
+void searchForMarbles(Mat* img){
+    Mat tempim = Mat(img->rows, img->cols, img->channels());
+    cv::cvtColor(*img, tempim, COLOR_BGR2HLS);
+
+    int rows = tempim.rows;
+    int cols = tempim.cols;
+
+    /*int cmin = cols;
+    int cmax = 0;
+    int rmin = rows;
+    int rmax = 0;*/
+
+    std::vector<int*> marbels;
+
+    for(int r = 0; r < rows; r++){
+        uchar* value = tempim.ptr(r);
+        for(int c = 0; c < cols; c++){
+
+            uchar h = *value++;
+            uchar l = *value++;
+            uchar s = *value++;
+
+            if(100 < h && h < 130){
+                /*img->at<Vec3b>(r, c) = Vec3b(0,0,255);
+                if(c < cmin) cmin = c;
+                if(c > cmax) cmax = c;
+                if(r < rmin) rmin = r;
+                if(r > rmax) rmax = r;*/
+                int* m = new int[4];
+                m[0] = m[1] = c;
+                m[2] = m[3] = r;
+                marbels.push_back(m);
+                myFloodFill(&tempim,m,c,r);
+            }
+        }
+    }
+    for(unsigned int i = 0; i < marbels.size(); i++){
+        rectangle(*img, Point(marbels[i][0],marbels[i][2]), Point(marbels[i][1],marbels[i][3]), Scalar(0,0,255), 1, LINE_AA);
+        putText(*img, "Marble", Point(marbels[i][0],marbels[i][2] - 4 ), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255), 1, LINE_AA);
+        rectangle(*img, Point(marbels[i][0],marbels[i][2] - 17), Point(marbels[i][0]+51,marbels[i][2]), Scalar(0,0,255), 1, LINE_AA);
+    }
+    /*
+    if(cmin != cols || cmax != 0 || rmin != rows || rmax != 0){
+        rectangle(*img, Point(cmin,rmin), Point(cmax,rmax), Scalar(0,0,255), 1, LINE_AA);
+        putText(*img, "Marple", Point(cmin,rmin - 4 ), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255), 1, LINE_AA);
+        rectangle(*img, Point(cmin,rmin - 17), Point(cmin+51,rmin), Scalar(0,0,255), 1, LINE_AA);
+    }*/
+}
+
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
   (void)_msg;
@@ -22,7 +91,7 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
 
   for (int i = 0; i < _msg->pose_size(); i++) {
     if (_msg->pose(i).name() == "pioneer2dx") {
-
+       /*
       std::cout << std::setprecision(2) << std::fixed << std::setw(6)
                 << _msg->pose(i).position().x() << std::setw(6)
                 << _msg->pose(i).position().y() << std::setw(6)
@@ -31,6 +100,7 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
                 << _msg->pose(i).orientation().x() << std::setw(6)
                 << _msg->pose(i).orientation().y() << std::setw(6)
                 << _msg->pose(i).orientation().z() << std::endl;
+                */
     }
   }
 }
@@ -44,7 +114,7 @@ void cameraCallback(ConstImageStampedPtr &msg) {
 
   im = im.clone();
   cv::cvtColor(im, im, COLOR_BGR2RGB);
-
+  searchForMarbles(&im);
   mutex.lock();
   cv::imshow("camera", im);
   mutex.unlock();
@@ -151,17 +221,17 @@ int main(int _argc, char **_argv) {
       break;
 
     if ((key == key_up) && (speed <= 1.2f))
-      speed += 0.05;
+      speed += 0.1;
     else if ((key == key_down) && (speed >= -1.2f))
-      speed -= 0.05;
+      speed -= 0.1;
     else if ((key == key_right) && (dir <= 0.4f))
       dir += 0.05;
     else if ((key == key_left) && (dir >= -0.4f))
       dir -= 0.05;
     else {
       // slow down
-      //      speed *= 0.1;
-      //      dir *= 0.1;
+      speed *= 0.8;
+      //dir   *= 0.8;
     }
 
     // Generate a pose
@@ -176,3 +246,4 @@ int main(int _argc, char **_argv) {
   // Make sure to shut everything down.
   gazebo::client::shutdown();
 }
+

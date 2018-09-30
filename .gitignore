@@ -1,2 +1,5 @@
-*.user
-build*/
+
+robot_control/*.user
+robot_control/*.user.*
+build-robot_control-Desktop-Debug/
+
