@@ -4,79 +4,198 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <vector>
 #include <iostream>
+#include <vector>
 using namespace cv;
+
+const Point rot[] = {Point(-1, -1), Point(-1, 0), Point(-1, 1), Point(0, 1),
+                     Point(1, 1),   Point(1, 0),  Point(1, -1), Point(0, -1)};
 
 static boost::mutex mutex;
 
-void myFloodFill(Mat* img, int* b, int c, int r){
-    uchar h = img->at<Vec3b>(r,c)[0];
-    if(h == 45) return;
-    if(100 > h || h > 130) return;
-    img->at<Vec3b>(r,c)[0] = 45;
-
-    if(c < b[0]) b[0] = c;
-    if(c > b[1]) b[1] = c;
-    if(r < b[2]) b[2] = r;
-    if(r > b[3]) b[3] = r;
-
-    myFloodFill(img, b, c + 1, r);
-    myFloodFill(img, b, c - 1, r);
-    myFloodFill(img, b, c    , r + 1);
-    myFloodFill(img, b, c    , r - 1);
+void findOutline(Mat *img, int sr, int sc, int r, int c, std::vector<Point> *pts, int dir = 5) {
+  if (c == sc && r == sr && !pts->empty())
     return;
+  int tdir = 0;
+  int nc = 0;
+  int nr = 0;
+  for (int i = 0; i < 8; i++) {
+    tdir = (dir + 5 + i) % 8;
+    nc = c + rot[tdir].x;
+    nr = r + rot[tdir].y;
+    uchar h = img->at<Vec3b>(nr, nc)[0];
+    if (100 < h && h < 130) {
+      break;
+    }
+  }
+  pts->push_back(Point(nc, nr));
+  if (pts->size() > 1000) return;
+  return findOutline(img, sr, sc, nr, nc, pts, tdir);
 }
 
-void searchForMarbles(Mat* img){
-    Mat tempim = Mat(img->rows, img->cols, img->channels());
-    cv::cvtColor(*img, tempim, COLOR_BGR2HLS);
+void myFloodFill(Mat *img, int *b, int c, int r) {
+  uchar h = img->at<Vec3b>(r, c)[0];
+  if (h == 45) return;
+  if (100 > h || h > 130) return;
+  img->at<Vec3b>(r, c)[0] = 45;
 
-    int rows = tempim.rows;
-    int cols = tempim.cols;
+  if (c < b[0]) b[0] = c;
+  if (c > b[1]) b[1] = c;
+  if (r < b[2]) b[2] = r;
+  if (r > b[3]) b[3] = r;
 
-    /*int cmin = cols;
-    int cmax = 0;
-    int rmin = rows;
-    int rmax = 0;*/
+  myFloodFill(img, b, c + 1, r);
+  myFloodFill(img, b, c - 1, r);
+  myFloodFill(img, b, c, r + 1);
+  // myFloodFill(img, b, c    , r - 1);
+  return;
+}
 
-    std::vector<int*> marbels;
+Point2f findCentrum(Point a, Point b, Point c) {
+  Point2f an(b.x - a.x, b.y - b.y);
+  Point2f bn(c.x - b.x, c.y - b.y);
+  Point2f aq(a.x + an.x * .5, a.y + an.y * .5);
+  Point2f bq(b.x + bn.x * .5, b.y + bn.y * .5);
 
-    for(int r = 0; r < rows; r++){
-        uchar* value = tempim.ptr(r);
-        for(int c = 0; c < cols; c++){
+  float a1 = an.x;
+  float b1 = an.y;
+  float c1 = an.x * aq.x + an.y * aq.y;
 
-            uchar h = *value++;
-            uchar l = *value++;
-            uchar s = *value++;
+  float a2 = bn.x;
+  float b2 = bn.y;
+  float c2 = bn.x * bq.x + bn.y * bq.y;
 
-            if(100 < h && h < 130){
-                /*img->at<Vec3b>(r, c) = Vec3b(0,0,255);
-                if(c < cmin) cmin = c;
-                if(c > cmax) cmax = c;
-                if(r < rmin) rmin = r;
-                if(r > rmax) rmax = r;*/
-                int* m = new int[4];
-                m[0] = m[1] = c;
-                m[2] = m[3] = r;
-                marbels.push_back(m);
-                myFloodFill(&tempim,m,c,r);
-            }
+  Mat m1 = (Mat_<float>(2, 2) << c1, b1, c2, b2);
+  Mat m2 = (Mat_<float>(2, 2) << a1, c1, a2, c2);
+  Mat me = (Mat_<float>(2, 2) << a1, b1, a2, b2);
+
+  float x = determinant(m1) / determinant(me);
+  float y = determinant(m2) / determinant(me);
+
+  return Point2f(x, y);
+}
+
+void circularRandSac(std::vector<Point> *cfp, std::vector<int*> *m) {
+  std::vector<Point> cf = *cfp;
+
+  std::mt19937 rng;
+  rng.seed(std::random_device()());
+  std::uniform_int_distribution<std::mt19937::result_type> dist(1, cf.size() - 1);
+
+    for(int ittr = 0; ittr < 100; ittr++) {
+      if (cf.size() < 10) return;
+      int a, b, c;
+      while (true) {
+        a = dist(rng);
+        b = dist(rng);
+        c = dist(rng);
+        if (a != b && b != c && c != a) break;
+      }
+      Point2f p = findCentrum(cf[a], cf[b], cf[c]);
+      Point2f delta = Point2f(cf[a]) - p;
+      double r2 = sqrt(delta.x * delta.x + delta.y * delta.y);
+
+      int count = 0;
+      int i = 0;
+      float ra = 0;
+      for (i; i < cf.size(); i++) {
+        Point2f delta = Point2f(cf[i]) - p;
+        double r2t = sqrt(delta.x * delta.x + delta.y * delta.y);
+        float d = r2 - r2t;
+        if (-0.4 < d && d < 0.4){
+          count++;
+
         }
+      }
+      float per = (float)count / (float)cf.size();
+      if (per > 0.4 && count > 20 || count > 100) {
+          int n = 1;
+          auto predicate = [&p, &r2, &ra, &n](const Point &tp) {
+              Point2f delta = Point2f(tp) - p;
+              double r2t = sqrt(delta.x * delta.x + delta.y * delta.y);
+              float d = r2 - r2t;
+              if (-2 < d && d < 2){
+                  ra += r2t;
+                  n++;
+                  return true;
+              };
+              return false;
+          };
+           cf.erase(std::remove_if(cf.begin(), cf.end(), predicate), cf.end());
+          int* ma = new int[3];
+          ma[0] = p.x * 4;
+          ma[1] = p.y * 4;
+          ma[2] = ra/n * 4;
+          m->push_back(ma);
+
+
+      }
     }
-    for(unsigned int i = 0; i < marbels.size(); i++){
-        rectangle(*img, Point(marbels[i][0],marbels[i][2]), Point(marbels[i][1],marbels[i][3]), Scalar(0,0,255), 1, LINE_AA);
-        putText(*img, "Marble", Point(marbels[i][0],marbels[i][2] - 4 ), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255), 1, LINE_AA);
-        rectangle(*img, Point(marbels[i][0],marbels[i][2] - 17), Point(marbels[i][0]+51,marbels[i][2]), Scalar(0,0,255), 1, LINE_AA);
-    }
-    /*
-    if(cmin != cols || cmax != 0 || rmin != rows || rmax != 0){
-        rectangle(*img, Point(cmin,rmin), Point(cmax,rmax), Scalar(0,0,255), 1, LINE_AA);
-        putText(*img, "Marple", Point(cmin,rmin - 4 ), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0,0,255), 1, LINE_AA);
-        rectangle(*img, Point(cmin,rmin - 17), Point(cmin+51,rmin), Scalar(0,0,255), 1, LINE_AA);
-    }*/
+
+
 }
 
+void searchForMarbles(Mat *img) {
+  Mat tempim = Mat(img->rows, img->cols, img->channels());
+  cv::cvtColor(*img, tempim, COLOR_BGR2HLS);
+
+  int rows = tempim.rows;
+  int cols = tempim.cols;
+
+  std::vector<int *> marbels;
+  std::vector<std::vector<Point>> marbelsOL;
+
+  for (int r = 0; r < rows; r++) {
+    uchar *value = tempim.ptr(r);
+    for (int c = 0; c < cols; c++) {
+
+      uchar h = *value++;
+      uchar l = *value++;
+      uchar s = *value++;
+
+      if (100 < h && h < 130) {
+        std::vector<Point> ol;
+        findOutline(&tempim, r, c, r, c, &ol);
+        marbelsOL.push_back(ol);
+
+        int *m = new int[4];
+        m[0] = m[1] = c;
+        m[2] = m[3] = r;
+        marbels.push_back(m);
+        myFloodFill(&tempim, m, c, r);
+      }
+    }
+  }
+  std::vector<int*> mars;
+  for (unsigned int i = 0; i < marbelsOL.size(); i++) {
+
+    const Point *pts = (const Point *)Mat(marbelsOL[i]).data;
+    int ntps = marbelsOL[i].size(); // Mat(ol).rows;
+    polylines(tempim, &pts, &ntps, 1, false, Scalar(255, 255, 255), 1, LINE_AA);
+
+    circularRandSac(&marbelsOL[i], &mars);
+  }
+
+  for (unsigned int i = 0; i < mars.size(); i++) {
+    int* v = mars[i];
+    Point c(v[0],v[1]);
+
+    circle(*img, c, v[2],Scalar(255,255,0),1,LINE_8, 2);
+  }
+
+  for (unsigned int i = 0; i < marbels.size(); i++) {
+    rectangle(*img, Point(marbels[i][0], marbels[i][2]),
+              Point(marbels[i][1], marbels[i][3]), Scalar(0, 0, 255), 1,
+              LINE_AA);
+    putText(*img, "Marble", Point(marbels[i][0], marbels[i][2] - 4),
+            FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1, LINE_AA);
+    rectangle(*img, Point(marbels[i][0], marbels[i][2] - 17),
+              Point(marbels[i][0] + 51, marbels[i][2]), Scalar(0, 0, 255), 1,
+              LINE_AA);
+  }
+  cv::cvtColor(tempim, tempim, COLOR_HLS2BGR);
+  imshow("Vision", tempim);
+}
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
   (void)_msg;
@@ -91,16 +210,16 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
 
   for (int i = 0; i < _msg->pose_size(); i++) {
     if (_msg->pose(i).name() == "pioneer2dx") {
-       /*
-      std::cout << std::setprecision(2) << std::fixed << std::setw(6)
-                << _msg->pose(i).position().x() << std::setw(6)
-                << _msg->pose(i).position().y() << std::setw(6)
-                << _msg->pose(i).position().z() << std::setw(6)
-                << _msg->pose(i).orientation().w() << std::setw(6)
-                << _msg->pose(i).orientation().x() << std::setw(6)
-                << _msg->pose(i).orientation().y() << std::setw(6)
-                << _msg->pose(i).orientation().z() << std::endl;
-                */
+      /*
+     std::cout << std::setprecision(2) << std::fixed << std::setw(6)
+               << _msg->pose(i).position().x() << std::setw(6)
+               << _msg->pose(i).position().y() << std::setw(6)
+               << _msg->pose(i).position().z() << std::setw(6)
+               << _msg->pose(i).orientation().w() << std::setw(6)
+               << _msg->pose(i).orientation().x() << std::setw(6)
+               << _msg->pose(i).orientation().y() << std::setw(6)
+               << _msg->pose(i).orientation().z() << std::endl;
+               */
     }
   }
 }
@@ -213,6 +332,9 @@ int main(int _argc, char **_argv) {
   while (true) {
     gazebo::common::Time::MSleep(10);
 
+    // std:: cout << findCentrum(Point(140,120),Point(180,120),Point(160,140))
+    // << std::endl;
+
     mutex.lock();
     int key = cv::waitKey(1);
     mutex.unlock();
@@ -221,17 +343,17 @@ int main(int _argc, char **_argv) {
       break;
 
     if ((key == key_up) && (speed <= 1.2f))
-      speed += 0.1;
+      speed += 0.4;
     else if ((key == key_down) && (speed >= -1.2f))
-      speed -= 0.1;
+      speed -= 0.4;
     else if ((key == key_right) && (dir <= 0.4f))
       dir += 0.05;
     else if ((key == key_left) && (dir >= -0.4f))
       dir -= 0.05;
     else {
       // slow down
-      speed *= 0.8;
-      //dir   *= 0.8;
+      // speed *= 0.8;
+      // dir   *= 0.8;
     }
 
     // Generate a pose
@@ -246,4 +368,3 @@ int main(int _argc, char **_argv) {
   // Make sure to shut everything down.
   gazebo::client::shutdown();
 }
-
