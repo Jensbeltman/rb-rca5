@@ -47,7 +47,7 @@ void myFloodFill(Mat *img, int *b, int c, int r) {
   myFloodFill(img, b, c + 1, r);
   myFloodFill(img, b, c - 1, r);
   myFloodFill(img, b, c, r + 1);
-  // myFloodFill(img, b, c    , r - 1);
+  myFloodFill(img, b, c    , r - 1);
   return;
 }
 
@@ -82,7 +82,7 @@ void circularRandSac(std::vector<Point> *cfp, std::vector<int*> *m) {
   rng.seed(std::random_device()());
   std::uniform_int_distribution<std::mt19937::result_type> dist(1, cf.size() - 1);
 
-    for(int ittr = 0; ittr < 100; ittr++) {
+    for(int ittr = 0; ittr < 200; ittr++) {
       if (cf.size() < 10) return;
       int a, b, c;
       while (true) {
@@ -102,19 +102,19 @@ void circularRandSac(std::vector<Point> *cfp, std::vector<int*> *m) {
         Point2f delta = Point2f(cf[i]) - p;
         double r2t = sqrt(delta.x * delta.x + delta.y * delta.y);
         float d = r2 - r2t;
-        if (-0.4 < d && d < 0.4){
+        if (-0.5 < d && d < 0.5){
           count++;
 
         }
       }
       float per = (float)count / (float)cf.size();
-      if (per > 0.4 && count > 20 || count > 100) {
+      if (per > 0.3 && count > 20 || count > 100) {
           int n = 1;
           auto predicate = [&p, &r2, &ra, &n](const Point &tp) {
               Point2f delta = Point2f(tp) - p;
               double r2t = sqrt(delta.x * delta.x + delta.y * delta.y);
               float d = r2 - r2t;
-              if (-2 < d && d < 2){
+              if (-3 < d && d < 3){
                   ra += r2t;
                   n++;
                   return true;
@@ -127,13 +127,27 @@ void circularRandSac(std::vector<Point> *cfp, std::vector<int*> *m) {
           ma[1] = p.y * 4;
           ma[2] = ra/n * 4;
           m->push_back(ma);
-
-
       }
     }
 
 
 }
+
+double* findDist(int r, int x){
+    double c = 160;
+    double xmin = c - (x - 0.5 * r);
+    double xmax = c - (x + 0.5 * r);
+
+    double smin = sqrt(xmin*xmin + 277*277);
+    double smax = sqrt(xmax*xmax + 277*277);
+
+    double angle = .5 * acos((smin*smin + smax*smax - ((double) r*r))/(2*smin*smax));
+
+    double d = 0.5/tan(angle);
+    std::cout << d << std::setw(4) << " : ";
+    return &d;
+}
+
 
 void searchForMarbles(Mat *img) {
   Mat tempim = Mat(img->rows, img->cols, img->channels());
@@ -178,12 +192,24 @@ void searchForMarbles(Mat *img) {
 
   for (unsigned int i = 0; i < mars.size(); i++) {
     int* v = mars[i];
-    Point c(v[0],v[1]);
+    int x = v[0],
+        y = v[1],
+        r = v[2];
+    Point c(x,y);
 
-    circle(*img, c, v[2],Scalar(255,255,0),1,LINE_8, 2);
+    circle(*img, c, r,Scalar(255,255,0),1,LINE_8, 2);
+    double* d = findDist(r, x);
+    //std::cout << *d << std::setw(4) << " : ";
+    std::ostringstream ss;
+    ss << d;
+    std::string s(ss.str());
+    putText(*img, "egern", c,
+            FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1, LINE_AA);
+
   }
+  std::cout << std::endl;
 
-  for (unsigned int i = 0; i < marbels.size(); i++) {
+  /*for (unsigned int i = 0; i < marbels.size(); i++) {
     rectangle(*img, Point(marbels[i][0], marbels[i][2]),
               Point(marbels[i][1], marbels[i][3]), Scalar(0, 0, 255), 1,
               LINE_AA);
@@ -192,7 +218,7 @@ void searchForMarbles(Mat *img) {
     rectangle(*img, Point(marbels[i][0], marbels[i][2] - 17),
               Point(marbels[i][0] + 51, marbels[i][2]), Scalar(0, 0, 255), 1,
               LINE_AA);
-  }
+  }*/
   cv::cvtColor(tempim, tempim, COLOR_HLS2BGR);
   imshow("Vision", tempim);
 }
@@ -280,7 +306,6 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
   cv::putText(im, std::to_string(sec) + ":" + std::to_string(nsec),
               cv::Point(10, 20), cv::FONT_HERSHEY_PLAIN, 1.0,
               cv::Scalar(255, 0, 0));
-
   mutex.lock();
   cv::imshow("lidar", im);
   mutex.unlock();
@@ -331,9 +356,6 @@ int main(int _argc, char **_argv) {
   // Loop
   while (true) {
     gazebo::common::Time::MSleep(10);
-
-    // std:: cout << findCentrum(Point(140,120),Point(180,120),Point(160,140))
-    // << std::endl;
 
     mutex.lock();
     int key = cv::waitKey(1);
