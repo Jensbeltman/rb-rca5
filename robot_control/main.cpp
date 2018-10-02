@@ -133,7 +133,7 @@ void circularRandSac(std::vector<Point> *cfp, std::vector<int*> *m) {
 
 }
 
-double* findDist(int r, int x){
+double findDist(int r, int x){
     double c = 160;
     double xmin = c - (x - 0.5 * r);
     double xmax = c - (x + 0.5 * r);
@@ -141,11 +141,11 @@ double* findDist(int r, int x){
     double smin = sqrt(xmin*xmin + 277*277);
     double smax = sqrt(xmax*xmax + 277*277);
 
-    double angle = .5 * acos((smin*smin + smax*smax - ((double) r*r))/(2*smin*smax));
+    double angle = .5 * acos((smin*smin + smax*smax - ((double) r*r))/(2.*smin*smax));
 
-    double d = 0.5/tan(angle);
-    std::cout << d << std::setw(4) << " : ";
-    return &d;
+    //double d = 0.5/tan(angle);
+    //std::cout << std::setw(4) << xmin << " : " << xmax << " : " << d << std::setw(4) << " : ";
+    return 0.5/tan(angle);
 }
 
 
@@ -198,12 +198,12 @@ void searchForMarbles(Mat *img) {
     Point c(x,y);
 
     circle(*img, c, r,Scalar(255,255,0),1,LINE_8, 2);
-    double* d = findDist(r, x);
+    double d = findDist(r*.25, x*.25);
     //std::cout << *d << std::setw(4) << " : ";
     std::ostringstream ss;
     ss << d;
     std::string s(ss.str());
-    putText(*img, "egern", c,
+    putText(*img, s, Point(x/4,y/4),
             FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1, LINE_AA);
 
   }
