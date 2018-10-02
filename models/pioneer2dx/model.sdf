@@ -43,7 +43,7 @@
         <pose>0 0 0.04 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://pioneer2dx/meshes/chassis.dae</uri>
+            <uri>model://pioneer2dx/meshes/packman.dae</uri>
           </mesh>
         </geometry>
       </visual>

@@ -20,7 +20,7 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
   // Dump the message contents to stdout.
   //  std::cout << _msg->DebugString();
 
-  for (int i = 0; i < _msg->pose_size(); i++) {
+  for (int i = 0; i < _msg-> pose_size(); i++) {
     if (_msg->pose(i).name() == "pioneer2dx") {
 
       std::cout << std::setprecision(2) << std::fixed << std::setw(6)
@@ -151,7 +151,7 @@ int main(int _argc, char **_argv) {
       break;
 
     if ((key == key_up) && (speed <= 1.2f))
-      speed += 0.05;
+	  speed += 0.2;
     else if ((key == key_down) && (speed >= -1.2f))
       speed -= 0.05;
     else if ((key == key_right) && (dir <= 0.4f))
