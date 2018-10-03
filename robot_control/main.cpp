@@ -5,9 +5,14 @@
 #include <opencv2/opencv.hpp>
 
 #include <iostream>
+
+#include <map.h>
 using namespace cv;
 
 static boost::mutex mutex;
+
+static Point gpos(0,0);
+static double gdir = 0;
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
   (void)_msg;
@@ -18,11 +23,14 @@ void statCallback(ConstWorldStatisticsPtr &_msg) {
 
 void poseCallback(ConstPosesStampedPtr &_msg) {
   // Dump the message contents to stdout.
-  //  std::cout << _msg->DebugString();
+  //std::cout << _msg->DebugString();
 
   for (int i = 0; i < _msg->pose_size(); i++) {
     if (_msg->pose(i).name() == "pioneer2dx") {
-
+      gpos.x = 6 * _msg->pose(i).position().x();
+      gpos.y = - 6 * _msg->pose(i).position().y();
+      gdir = 3.14 + 2 * atan2(_msg->pose(i).orientation().w(),_msg->pose(i).orientation().z());
+      //gdir.y = 4 * _msg->pose(i).orientation().w();
       std::cout << std::setprecision(2) << std::fixed << std::setw(6)
                 << _msg->pose(i).position().x() << std::setw(6)
                 << _msg->pose(i).position().y() << std::setw(6)
@@ -130,6 +138,9 @@ int main(int _argc, char **_argv) {
   worldPublisher->WaitForConnection();
   worldPublisher->Publish(controlMessage);
 
+  Mat immap = imread("../models/bigworld/meshes/floor_plan.png", IMREAD_GRAYSCALE );
+  Map map(&immap, 4);
+
   const int key_left = 81;
   const int key_up = 82;
   const int key_down = 84;
@@ -143,8 +154,11 @@ int main(int _argc, char **_argv) {
   while (true) {
     gazebo::common::Time::MSleep(10);
 
+    map.updatePose(gpos,gdir);
+
     mutex.lock();
     int key = cv::waitKey(1);
+    map.show();
     mutex.unlock();
 
     if (key == key_esc)

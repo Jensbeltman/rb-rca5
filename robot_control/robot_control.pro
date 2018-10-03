@@ -3,8 +3,12 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    map.cpp
 
 CONFIG += link_pkgconfig
 PKGCONFIG += gazebo
 PKGCONFIG += opencv
+
+HEADERS += \
+    map.h
