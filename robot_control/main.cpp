@@ -4,10 +4,16 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <iostream>
-using namespace cv;
+#include "fl/Headers.h"
 
-static boost::mutex mutex;
+#include <iostream>
+
+using namespace std;
+using namespace cv;
+using namespace fl;
+
+static boost::mutex mutex1;
+static float mRange = 10;
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
   (void)_msg;
@@ -17,22 +23,23 @@ void statCallback(ConstWorldStatisticsPtr &_msg) {
 }
 
 void poseCallback(ConstPosesStampedPtr &_msg) {
+  (void)_msg;
   // Dump the message contents to stdout.
   //  std::cout << _msg->DebugString();
 
-  for (int i = 0; i < _msg->pose_size(); i++) {
-    if (_msg->pose(i).name() == "pioneer2dx") {
+  //  for (int i = 0; i < _msg->pose_size(); i++) {
+  //    if (_msg->pose(i).name() == "pioneer2dx") {
 
-      std::cout << std::setprecision(2) << std::fixed << std::setw(6)
-                << _msg->pose(i).position().x() << std::setw(6)
-                << _msg->pose(i).position().y() << std::setw(6)
-                << _msg->pose(i).position().z() << std::setw(6)
-                << _msg->pose(i).orientation().w() << std::setw(6)
-                << _msg->pose(i).orientation().x() << std::setw(6)
-                << _msg->pose(i).orientation().y() << std::setw(6)
-                << _msg->pose(i).orientation().z() << std::endl;
-    }
-  }
+  //      std::cout << std::setprecision(2) << std::fixed << std::setw(6)
+  //                << _msg->pose(i).position().x() << std::setw(6)
+  //                << _msg->pose(i).position().y() << std::setw(6)
+  //                << _msg->pose(i).position().z() << std::setw(6)
+  //                << _msg->pose(i).orientation().w() << std::setw(6)
+  //                << _msg->pose(i).orientation().x() << std::setw(6)
+  //                << _msg->pose(i).orientation().y() << std::setw(6)
+  //                << _msg->pose(i).orientation().z() << std::endl;
+  //    }
+  //  }
 }
 
 void cameraCallback(ConstImageStampedPtr &msg) {
@@ -45,9 +52,9 @@ void cameraCallback(ConstImageStampedPtr &msg) {
   im = im.clone();
   cv::cvtColor(im, im, COLOR_BGR2RGB);
 
-  mutex.lock();
+  mutex1.lock();
   cv::imshow("camera", im);
-  mutex.unlock();
+  mutex1.unlock();
 }
 
 void lidarCallback(ConstLaserScanStampedPtr &msg) {
@@ -74,10 +81,15 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
 
   cv::Mat im(height, width, CV_8UC3);
   im.setTo(0);
+  float prevousRange = 20;
   for (int i = 0; i < nranges; i++) {
     float angle = angle_min + i * angle_increment;
-    float range = std::min(float(msg->scan().ranges(i)), range_max);
+	float range = std::min(float(msg->scan().ranges(i)), range_max);
+	mRange =
+		1 - (range_max / 2) / min(float(msg->scan().ranges(i)), prevousRange);
+	prevousRange = float(msg->scan().ranges(i));
     //    double intensity = msg->scan().intensities(i);
+	cout << range << endl;
     cv::Point2f startpt(200.5f + range_min * px_per_m * std::cos(angle),
                         200.5f - range_min * px_per_m * std::sin(angle));
     cv::Point2f endpt(200.5f + range * px_per_m * std::cos(angle),
@@ -92,9 +104,9 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
               cv::Point(10, 20), cv::FONT_HERSHEY_PLAIN, 1.0,
               cv::Scalar(255, 0, 0));
 
-  mutex.lock();
+  mutex1.lock();
   cv::imshow("lidar", im);
-  mutex.unlock();
+  mutex1.unlock();
 }
 
 int main(int _argc, char **_argv) {
@@ -139,38 +151,86 @@ int main(int _argc, char **_argv) {
   float speed = 0.0;
   float dir = 0.0;
 
+  // fuzzylite
+  Engine *engine = new Engine;
+  engine->setName("ObstacleAvoidance");
+  engine->setDescription("");
+
+  InputVariable *obstacle = new InputVariable;
+  obstacle->setName("obstacle");
+  obstacle->setDescription("");
+  obstacle->setEnabled(true);
+  obstacle->setRange(-1.000, 1.000);
+  obstacle->setLockValueInRange(false);
+  obstacle->addTerm(new Ramp("inrange", 0.000, 1.000));
+  obstacle->addTerm(new Ramp("outofrange", 0.000, -1.000));
+  engine->addInputVariable(obstacle);
+
+  OutputVariable *motor = new OutputVariable;
+  motor->setName("motor");
+  motor->setDescription("");
+  motor->setEnabled(true);
+  motor->setRange(-1.000, 1.000);
+  motor->setLockValueInRange(false);
+  motor->setAggregation(new Maximum);
+  motor->setDefuzzifier(new Centroid(100));
+  motor->setDefaultValue(0.000);
+  motor->setLockPreviousValue(false);
+  motor->addTerm(new Ramp("on", 0.000, 1.000));
+  motor->addTerm(new Ramp("off", 0.000, -1.000));
+  engine->addOutputVariable(motor);
+
+  RuleBlock *mamdani = new RuleBlock;
+  mamdani->setName("mamdani");
+  mamdani->setDescription("");
+  mamdani->setEnabled(true);
+  mamdani->setConjunction(fl::null);
+  mamdani->setDisjunction(fl::null);
+  mamdani->setImplication(new AlgebraicProduct);
+  mamdani->setActivation(new General);
+  mamdani->addRule(
+	  Rule::parse("if obstacle is inrange then motor is off", engine));
+  mamdani->addRule(
+	  Rule::parse("if obstacle is outofrange then motor is on", engine));
+  engine->addRuleBlock(mamdani);
+  //"if obstacle is left then mSteer is right"
   // Loop
+
   while (true) {
-    gazebo::common::Time::MSleep(10);
+	gazebo::common::Time::MSleep(10);
 
-    mutex.lock();
-    int key = cv::waitKey(1);
-    mutex.unlock();
+	mutex1.lock();
+	int key = cv::waitKey(1);
+	mutex1.unlock();
 
-    if (key == key_esc)
-      break;
+	obstacle->setValue(mRange);
+	engine->process();
 
-    if ((key == key_up) && (speed <= 1.2f))
-      speed += 0.05;
-    else if ((key == key_down) && (speed >= -1.2f))
-      speed -= 0.05;
-    else if ((key == key_right) && (dir <= 0.4f))
-      dir += 0.05;
-    else if ((key == key_left) && (dir >= -0.4f))
-      dir -= 0.05;
-    else {
-      // slow down
-      //      speed *= 0.1;
-      //      dir *= 0.1;
-    }
+	ignition::math::Pose3d pose(double(-(motor->getValue())), 0, 0, 0, 0, 0);
+	//	  if (key == key_esc)
+	//		break;
 
-    // Generate a pose
-    ignition::math::Pose3d pose(double(speed), 0, 0, 0, 0, double(dir));
+	//	  if ((key == key_up) && (speed <= 1.2f))
+	//		speed += 0.05;
+	//	  else if ((key == key_down) && (speed >= -1.2f))
+	//		speed -= 0.05;
+	//	  else if ((key == key_right) && (dir <= 0.4f))
+	//		dir += 0.05;
+	//	  else if ((key == key_left) && (dir >= -0.4f))
+	//		dir -= 0.05;
+	//	  else {
+	//		// slow down
+	//		//      speed *= 0.1;
+	//		//      dir *= 0.1;2
+	//	  }
 
-    // Convert to a pose message
-    gazebo::msgs::Pose msg;
-    gazebo::msgs::Set(&msg, pose);
-    movementPublisher->Publish(msg);
+	// Generate a pose
+	// ignition::math::Pose3d pose(double(speed), 0, 0, 0, 0, double(dir));
+
+	// Convert to a pose message
+	gazebo::msgs::Pose msg;
+	gazebo::msgs::Set(&msg, pose);
+	movementPublisher->Publish(msg);
   }
 
   // Make sure to shut everything down.

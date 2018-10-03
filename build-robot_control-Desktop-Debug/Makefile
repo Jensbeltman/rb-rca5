@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_QML_DEBUG
 CFLAGS        = -pipe -g -std=c++11 -std=c++14 -pthread -std=c++11 -std=c++14 -pthread -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -std=c++11 -std=c++14 -pthread -std=c++11 -std=c++14 -pthread -Wall -W -fPIC $(DEFINES)
-INCPATH       = -I../robot_control -I. -isystem /usr/include/gazebo-9 -isystem /usr/include/sdformat-6.0 -isystem /usr/include/ignition/transport4 -isystem /usr/include/ignition/msgs1 -isystem /usr/include/ignition/fuel_tools1 -isystem /usr/include/x86_64-linux-gnu -I/usr/lib/x86_64-linux-gnu/libzip/include -isystem /usr/include/ignition/common1 -isystem /usr/include/ignition/math4 -isystem /usr/include/uuid -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -isystem /usr/local/include/opencv -isystem /usr/local/include -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I../robot_control -I. -I/opt/fuzzylite-6.0/fuzzylite -isystem /usr/include/gazebo-9 -isystem /usr/include/sdformat-6.0 -isystem /usr/include/ignition/transport4 -isystem /usr/include/ignition/msgs1 -isystem /usr/include/ignition/fuel_tools1 -isystem /usr/include/x86_64-linux-gnu -I/usr/lib/x86_64-linux-gnu/libzip/include -isystem /usr/include/ignition/common1 -isystem /usr/include/ignition/math4 -isystem /usr/include/uuid -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -isystem /usr/local/include/opencv -isystem /usr/local/include -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -38,7 +38,7 @@ DISTNAME      = robot_control1.0.0
 DISTDIR = /home/jens/UNI/project/rb-rca5/build-robot_control-Desktop-Debug/.tmp/robot_control1.0.0
 LINK          = g++
 LFLAGS        = 
-LIBS          = $(SUBLIBS) -L/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -Wl,-rpath,/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -lgazebo_transport -lgazebo_physics -lgazebo_sensors -lgazebo_rendering -lgazebo_gui -lgazebo_client -lgazebo_msgs -lgazebo_common -lgazebo -lboost_thread -lboost_signals -lboost_system -lboost_filesystem -lboost_program_options -lboost_regex -lboost_iostreams -lboost_date_time -lboost_chrono -lboost_atomic -lsdformat -ltbb -latomic -lignition-transport4 -luuid -lignition-msgs1 -lprotobuf -pthread -lpthread -lignition-math4 -lignition-fuel_tools1 -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_dnn_objdetect -lopencv_dpm -lopencv_face -lopencv_photo -lopencv_freetype -lopencv_fuzzy -lopencv_hfs -lopencv_img_hash -lopencv_line_descriptor -lopencv_optflow -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_surface_matching -lopencv_tracking -lopencv_video -lopencv_datasets -lopencv_text -lopencv_dnn -lopencv_plot -lopencv_xfeatures2d -lopencv_shape -lopencv_ml -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_flann -lopencv_xobjdetect -lopencv_imgcodecs -lopencv_objdetect -lopencv_xphoto -lopencv_imgproc -lopencv_core 
+LIBS          = $(SUBLIBS) -L /opt/fuzzylite-6.0/fuzzylite/release/bin -lfuzzylite-static -L/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -Wl,-rpath,/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -lgazebo_transport -lgazebo_physics -lgazebo_sensors -lgazebo_rendering -lgazebo_gui -lgazebo_client -lgazebo_msgs -lgazebo_common -lgazebo -lboost_thread -lboost_signals -lboost_system -lboost_filesystem -lboost_program_options -lboost_regex -lboost_iostreams -lboost_date_time -lboost_chrono -lboost_atomic -lsdformat -ltbb -latomic -lignition-transport4 -luuid -lignition-msgs1 -lprotobuf -pthread -lpthread -lignition-math4 -lignition-fuel_tools1 -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_dnn_objdetect -lopencv_dpm -lopencv_face -lopencv_photo -lopencv_freetype -lopencv_fuzzy -lopencv_hfs -lopencv_img_hash -lopencv_line_descriptor -lopencv_optflow -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_surface_matching -lopencv_tracking -lopencv_video -lopencv_datasets -lopencv_text -lopencv_dnn -lopencv_plot -lopencv_xfeatures2d -lopencv_shape -lopencv_ml -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_flann -lopencv_xobjdetect -lopencv_imgcodecs -lopencv_objdetect -lopencv_xphoto -lopencv_imgproc -lopencv_core 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -110,6 +110,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
+		../robot_control/.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -194,6 +195,7 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -268,6 +270,7 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf:
+.qmake.stash:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf:
@@ -326,7 +329,115 @@ compiler_clean:
 
 ####### Compile
 
-main.o: ../robot_control/main.cpp 
+main.o: ../robot_control/main.cpp /opt/fuzzylite-6.0/fuzzylite/fl/Headers.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/fuzzylite.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/Benchmark.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/Complexity.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/FldExporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/Exporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/Console.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/Engine.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/Exception.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/Activation.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/First.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/General.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/Highest.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/Last.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/Lowest.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/Proportional.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/activation/Threshold.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Bisector.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/IntegralDefuzzifier.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Defuzzifier.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Centroid.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/SmallestOfMaximum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/LargestOfMaximum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/MeanOfMaximum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedAverage.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedDefuzzifier.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/ActivationFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/ConstructionFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/Hedge.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/SNorm.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/Norm.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/TNorm.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Term.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/Operation.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/CloningFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/FactoryManager.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/TNormFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/SNormFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/DefuzzifierFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/TermFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/HedgeFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/factory/FunctionFactory.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Function.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/CppExporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/FclImporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/Importer.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/FclExporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/FisImporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/FisExporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/FllImporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/FllExporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/JavaExporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/imex/RScriptExporter.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/Any.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/Extremely.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/HedgeFunction.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/Not.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/Seldom.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/Somewhat.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/hedge/Very.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/AlgebraicSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/BoundedSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/DrasticSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/EinsteinSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/HamacherSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/Maximum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/NilpotentMaximum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/NormalizedSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/SNormFunction.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/s/UnboundedSum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/AlgebraicProduct.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/BoundedDifference.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/DrasticProduct.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/EinsteinProduct.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/HamacherProduct.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/Minimum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/NilpotentMinimum.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/norm/t/TNormFunction.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/rule/Antecedent.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/rule/Consequent.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/rule/Rule.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/rule/RuleBlock.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/rule/Expression.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Aggregated.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Activated.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Bell.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Binary.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Concave.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Constant.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Cosine.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Discrete.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Gaussian.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/GaussianProduct.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Linear.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/PiShape.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Ramp.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Rectangle.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/SShape.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Sigmoid.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/SigmoidDifference.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/SigmoidProduct.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Spike.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Trapezoid.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/Triangle.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/term/ZShape.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/variable/InputVariable.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/variable/Variable.h \
+		/opt/fuzzylite-6.0/fuzzylite/fl/variable/OutputVariable.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../robot_control/main.cpp
 
 ####### Install
