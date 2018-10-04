@@ -31,14 +31,15 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
       gpos.y = - 6 * _msg->pose(i).position().y();
       gdir = 3.14 + 2 * atan2(_msg->pose(i).orientation().w(),_msg->pose(i).orientation().z());
       //gdir.y = 4 * _msg->pose(i).orientation().w();
-      std::cout << std::setprecision(2) << std::fixed << std::setw(6)
+      /*std::cout << std::setprecision(2) << std::fixed << std::setw(6)
                 << _msg->pose(i).position().x() << std::setw(6)
                 << _msg->pose(i).position().y() << std::setw(6)
                 << _msg->pose(i).position().z() << std::setw(6)
                 << _msg->pose(i).orientation().w() << std::setw(6)
                 << _msg->pose(i).orientation().x() << std::setw(6)
                 << _msg->pose(i).orientation().y() << std::setw(6)
-                << _msg->pose(i).orientation().z() << std::endl;
+                << _msg->pose(i).orientation().z() << std::endl;*/
+      break;
     }
   }
 }
@@ -68,6 +69,8 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
   float range_min = float(msg->scan().range_min());
   float range_max = float(msg->scan().range_max());
 
+  std::cout << range_min << " : "<< range_max << " : " << angle_min << std::endl;
+
   int sec = msg->time().sec();
   int nsec = msg->time().nsec();
 
@@ -76,9 +79,9 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
 
   assert(nranges == nintensities);
 
-  int width = 400;
-  int height = 400;
-  float px_per_m = 200 / range_max;
+  int width = 120;
+  int height = 120;
+  float px_per_m = 6;
 
   cv::Mat im(height, width, CV_8UC3);
   im.setTo(0);
@@ -86,19 +89,19 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
     float angle = angle_min + i * angle_increment;
     float range = std::min(float(msg->scan().ranges(i)), range_max);
     //    double intensity = msg->scan().intensities(i);
-    cv::Point2f startpt(200.5f + range_min * px_per_m * std::cos(angle),
-                        200.5f - range_min * px_per_m * std::sin(angle));
-    cv::Point2f endpt(200.5f + range * px_per_m * std::cos(angle),
-                      200.5f - range * px_per_m * std::sin(angle));
+    cv::Point2f startpt(60.5f + range_min * px_per_m * std::cos(angle),
+                        60.5f - range_min * px_per_m * std::sin(angle));
+    cv::Point2f endpt(60.5f + range * px_per_m * std::cos(angle),
+                      60.5f - range * px_per_m * std::sin(angle));
     cv::line(im, startpt * 16, endpt * 16, cv::Scalar(255, 255, 255, 255), 1,
              cv::LINE_AA, 4);
 
     //    std::cout << angle << " " << range << " " << intensity << std::endl;
   }
-  cv::circle(im, cv::Point(200, 200), 2, cv::Scalar(0, 0, 255));
-  cv::putText(im, std::to_string(sec) + ":" + std::to_string(nsec),
-              cv::Point(10, 20), cv::FONT_HERSHEY_PLAIN, 1.0,
-              cv::Scalar(255, 0, 0));
+  cv::circle(im, cv::Point(60, 60), 2, cv::Scalar(0, 0, 255));
+  //cv::putText(im, std::to_string(sec) + ":" + std::to_string(nsec),
+  //            cv::Point(10, 20), cv::FONT_HERSHEY_PLAIN, 1.0,
+  //            cv::Scalar(255, 0, 0));
 
   mutex.lock();
   cv::imshow("lidar", im);

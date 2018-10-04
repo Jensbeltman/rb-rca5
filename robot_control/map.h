@@ -16,6 +16,7 @@ private:
   Mat map;
   Point pos = Point(0, 0);
   double dir = 0;
+  Mat lidarMask;
 
   Mat copySafe(Point p, double d);
 };

@@ -16,6 +16,16 @@ Map::Map(Mat *m, uchar s = 4) {
       }
     }
   }
+  lidarMask = Mat(120,120,CV_8UC1, Scalar(0));
+  circle(lidarMask,Point(60,60),60,Scalar(255),-1);
+  const Point* pts = new const Point[3] {
+    Point(60+100*cos(-2.268), 60+100*sin(-2.268)),
+    Point(60+100*cos( 2.268), 60+100*sin( 2.268)),
+    Point(60,60)
+  };
+  const int ntps = 3;
+  fillPoly(lidarMask,&pts,&ntps,1,Scalar(0));
+
 }
 
 void Map::show() {
@@ -40,11 +50,11 @@ Mat Map::copySafe(Point p, double d)
 {
     int rows = map.rows;
     int cols = map.cols;
-    Mat cut(40, 40, CV_8UC1);
-    for(int c = 0; c < 40; c++){
-        for(int r = 0; r < 40; r++){
-            int tc = c+p.x-20;
-            int tr = r+p.y-20;
+    Mat cut(120, 120, CV_8UC1);
+    for(int c = 0; c < 120; c++){
+        for(int r = 0; r < 120; r++){
+            int tc = c+p.x-60;
+            int tr = r+p.y-60;
             if( 0 <= tr && tr < rows && 0 <= tc && tc < cols )
                 cut.at<uchar>(r,c) = map.at<uchar>(tr,tc);
             else
@@ -52,7 +62,10 @@ Mat Map::copySafe(Point p, double d)
         }
     }
 
-    Mat r2d = getRotationMatrix2D(Point(20,20),57.2957795 * d,1);
-    warpAffine(cut,cut,r2d,Size(40,40));
-    return cut;
+    Mat r2d = getRotationMatrix2D(Point(60,60),57.2957795 * d,1);
+    warpAffine(cut,cut,r2d,Size(120,120));
+    Mat masked(120, 120, CV_8UC1, Scalar(0));
+    cut.copyTo(masked,lidarMask);
+    //Mat masked
+    return masked;
 }
