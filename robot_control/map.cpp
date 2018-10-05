@@ -31,20 +31,44 @@ Map::Map(Mat *m, uchar s = 4) {
 void Map::show() {
   Mat m = Mat(map.rows, map.cols, CV_8UC3);
   cvtColor(map, m, COLOR_GRAY2BGR);
-  arrowedLine(m, pos, pos + Point(8 * cos(dir), 8 * sin(dir)),
+  arrowedLine(m, pos, pos + Point2f(8 * cos(dir), 8 * sin(dir)),
               Scalar(0, 0, 255), 1, LINE_AA, 0, .5);
-  //Rect r(pos.x - 20, pos.y - 20, 40, 40);
-  //Mat cut = m(r);
-  imshow("lid", copySafe(pos,dir));
+
+  //imshow("lid", copySafe(pos,dir));
   imshow("Map", m);
 }
 
-void Map::updatePose(Point p, double d) {
-  pos = p + Point(map.cols / 2, map.rows / 2);
+void Map::updatePose(Point2f p, double d) {
+  pos = p + Point2f(map.cols / 2. + 2., map.rows / 2. + 2.);
   dir = d;
 }
 
-void Map::showLidar() {}
+void Map::showLidar() {
+    float angle_min = -2.2688899;
+    float angle_inc = 0.00710139284;
+    float r_max = 15 * 4;
+
+    cv::Mat im(r_max , 640, CV_8UC1);
+    im.setTo(255);
+    for(int i = 0; i < 640; i++){
+        float range = ray(pos, 60 , dir + angle_min + angle_inc * i);
+        cv::Point2f startpt(i,r_max);
+        cv::Point2f endpt(i,range);
+        cv::line(im, startpt, endpt, cv::Scalar(0), 1,
+                 cv::LINE_4, 0);
+    }
+    imshow("maplidar",im);
+
+}
+
+float Map::ray(Point2f p, float r, float angle){
+    Point2f delta(cos(angle),sin(angle));
+    for(float i = 0; i < r; i++){
+        if(map.at<uchar>(p+i*delta) == 0)
+            return i;
+    }
+    return r;
+}
 
 Mat Map::copySafe(Point p, double d)
 {

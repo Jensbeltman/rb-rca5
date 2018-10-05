@@ -7,11 +7,13 @@
 #include <iostream>
 
 #include <map.h>
+#include <laserscanner.h>
+
 using namespace cv;
 
 static boost::mutex mutex;
 
-static Point gpos(0,0);
+static Point2f gpos(0,0);
 static double gdir = 0;
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
@@ -30,15 +32,6 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
       gpos.x = 6 * _msg->pose(i).position().x();
       gpos.y = - 6 * _msg->pose(i).position().y();
       gdir = 3.14 + 2 * atan2(_msg->pose(i).orientation().w(),_msg->pose(i).orientation().z());
-      //gdir.y = 4 * _msg->pose(i).orientation().w();
-      /*std::cout << std::setprecision(2) << std::fixed << std::setw(6)
-                << _msg->pose(i).position().x() << std::setw(6)
-                << _msg->pose(i).position().y() << std::setw(6)
-                << _msg->pose(i).position().z() << std::setw(6)
-                << _msg->pose(i).orientation().w() << std::setw(6)
-                << _msg->pose(i).orientation().x() << std::setw(6)
-                << _msg->pose(i).orientation().y() << std::setw(6)
-                << _msg->pose(i).orientation().z() << std::endl;*/
       break;
     }
   }
@@ -61,15 +54,12 @@ void cameraCallback(ConstImageStampedPtr &msg) {
 
 void lidarCallback(ConstLaserScanStampedPtr &msg) {
 
-  //  std::cout << ">> " << msg->DebugString() << std::endl;
   float angle_min = float(msg->scan().angle_min());
   //  double angle_max = msg->scan().angle_max();
   float angle_increment = float(msg->scan().angle_step());
 
   float range_min = float(msg->scan().range_min());
   float range_max = float(msg->scan().range_max());
-
-  std::cout << range_min << " : "<< range_max << " : " << angle_min << std::endl;
 
   int sec = msg->time().sec();
   int nsec = msg->time().nsec();
@@ -79,30 +69,18 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
 
   assert(nranges == nintensities);
 
-  int width = 120;
-  int height = 120;
-  float px_per_m = 6;
+  int width = nranges - 1;
+  int height = range_max * 6;
 
-  cv::Mat im(height, width, CV_8UC3);
+  cv::Mat im(height, width, CV_8UC1);
   im.setTo(0);
   for (int i = 0; i < nranges; i++) {
-    float angle = angle_min + i * angle_increment;
     float range = std::min(float(msg->scan().ranges(i)), range_max);
-    //    double intensity = msg->scan().intensities(i);
-    cv::Point2f startpt(60.5f + range_min * px_per_m * std::cos(angle),
-                        60.5f - range_min * px_per_m * std::sin(angle));
-    cv::Point2f endpt(60.5f + range * px_per_m * std::cos(angle),
-                      60.5f - range * px_per_m * std::sin(angle));
-    cv::line(im, startpt * 16, endpt * 16, cv::Scalar(255, 255, 255, 255), 1,
-             cv::LINE_AA, 4);
-
-    //    std::cout << angle << " " << range << " " << intensity << std::endl;
+    cv::Point2f startpt(i,0);
+    cv::Point2f endpt(i,range*6);
+    cv::line(im, startpt, endpt, cv::Scalar(255), 1,
+             cv::LINE_4, 0);
   }
-  cv::circle(im, cv::Point(60, 60), 2, cv::Scalar(0, 0, 255));
-  //cv::putText(im, std::to_string(sec) + ":" + std::to_string(nsec),
-  //            cv::Point(10, 20), cv::FONT_HERSHEY_PLAIN, 1.0,
-  //            cv::Scalar(255, 0, 0));
-
   mutex.lock();
   cv::imshow("lidar", im);
   mutex.unlock();
@@ -126,12 +104,20 @@ int main(int _argc, char **_argv) {
   gazebo::transport::SubscriberPtr cameraSubscriber =
       node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
 
-  gazebo::transport::SubscriberPtr lidarSubscriber =
+  gazebo::transport::SubscriberPtr lidarSubscriber1 =
       node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", lidarCallback);
+
+  LaserScanner ls;
+
+  gazebo::transport::SubscriberPtr lidarSubscriber2 =
+        node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &LaserScanner::parseScan, &ls);
 
   // Publish to the robot vel_cmd topic
   gazebo::transport::PublisherPtr movementPublisher =
       node->Advertise<gazebo::msgs::Pose>("~/pioneer2dx/vel_cmd");
+
+  gazebo::transport::PublisherPtr jointPublisher =
+      node->Advertise<gazebo::msgs::JointCmd>("~/pioneer2dx/joint_cmd");
 
   // Publish a reset of the world
   gazebo::transport::PublisherPtr worldPublisher =
@@ -162,6 +148,7 @@ int main(int _argc, char **_argv) {
     mutex.lock();
     int key = cv::waitKey(1);
     map.show();
+    map.showLidar();
     mutex.unlock();
 
     if (key == key_esc)
@@ -187,7 +174,21 @@ int main(int _argc, char **_argv) {
     // Convert to a pose message
     gazebo::msgs::Pose msg;
     gazebo::msgs::Set(&msg, pose);
+
+    //Left wheel control
+    gazebo::msgs::JointCmd ljcmd;
+    ljcmd.set_force(10);
+    ljcmd.set_name("pioneer2dx::pioneer2dx::left_wheel_hinge");
+
+    //Right wheel control
+    gazebo::msgs::JointCmd rjcmd;
+    ljcmd.set_force(10);
+    ljcmd.set_name("pioneer2dx::pioneer2dx::right_wheel_hinge");
+
+    //Publish messages
     movementPublisher->Publish(msg);
+    //jointPublisher->Publish(rjcmd);
+    //jointPublisher->Publish(ljcmd);
   }
 
   // Make sure to shut everything down.
