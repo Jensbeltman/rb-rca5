@@ -39,21 +39,23 @@ void Map::show() {
 }
 
 void Map::updatePose(Point2f p, double d) {
-  pos = p + Point2f(map.cols / 2. + 2., map.rows / 2. + 2.);
+  pos = p + Point2f(map.cols / 2., map.rows / 2.);
   dir = d;
 }
 
 void Map::showLidar() {
+    float scale = (72. / 25.4) * 2;
     float angle_min = -2.2688899;
     float angle_inc = 0.00710139284;
-    float r_max = 15 * 4;
+    float r_max = 10 * scale;
+    Point2f p = pos + 0.8 * Point2f(cos(dir), sin(dir));
 
     cv::Mat im(r_max , 640, CV_8UC1);
     im.setTo(255);
     for(int i = 0; i < 640; i++){
-        float range = ray(pos, 60 , dir + angle_min + angle_inc * i);
-        cv::Point2f startpt(i,r_max);
-        cv::Point2f endpt(i,range);
+        float range = ray(pos, r_max , dir + angle_min + angle_inc * i);
+        cv::Point2f startpt(639 - i,r_max);
+        cv::Point2f endpt(639 - i,range);
         cv::line(im, startpt, endpt, cv::Scalar(0), 1,
                  cv::LINE_4, 0);
     }
@@ -63,7 +65,7 @@ void Map::showLidar() {
 
 float Map::ray(Point2f p, float r, float angle){
     Point2f delta(cos(angle),sin(angle));
-    for(float i = 0; i < r; i++){
+    for(float i = 0; i < r; i+=.5){
         if(map.at<uchar>(p+i*delta) == 0)
             return i;
     }

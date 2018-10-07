@@ -26,11 +26,11 @@ void statCallback(ConstWorldStatisticsPtr &_msg) {
 void poseCallback(ConstPosesStampedPtr &_msg) {
   // Dump the message contents to stdout.
   //std::cout << _msg->DebugString();
-
+  float scale = (72. / 25.4) * 2.;
   for (int i = 0; i < _msg->pose_size(); i++) {
     if (_msg->pose(i).name() == "pioneer2dx") {
-      gpos.x = 6 * _msg->pose(i).position().x();
-      gpos.y = - 6 * _msg->pose(i).position().y();
+      gpos.x = _msg->pose(i).position().x() * scale ;
+      gpos.y = -_msg->pose(i).position().y() * scale;
       gdir = 3.14 + 2 * atan2(_msg->pose(i).orientation().w(),_msg->pose(i).orientation().z());
       break;
     }
@@ -68,17 +68,17 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
   int nintensities = msg->scan().intensities_size();
 
   assert(nranges == nintensities);
-
+  float scale = (72. / 25.4) * 2;
   int width = nranges - 1;
-  int height = range_max * 6;
+  int height = range_max * scale;
 
   cv::Mat im(height, width, CV_8UC1);
-  im.setTo(0);
+  im.setTo(255);
   for (int i = 0; i < nranges; i++) {
     float range = std::min(float(msg->scan().ranges(i)), range_max);
-    cv::Point2f startpt(i,0);
-    cv::Point2f endpt(i,range*6);
-    cv::line(im, startpt, endpt, cv::Scalar(255), 1,
+    cv::Point2f startpt(i,height);
+    cv::Point2f endpt(i,range*scale);
+    cv::line(im, startpt, endpt, cv::Scalar(0), 1,
              cv::LINE_4, 0);
   }
   mutex.lock();

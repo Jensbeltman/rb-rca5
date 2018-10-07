@@ -6,7 +6,6 @@
 #include <gazebo/transport/transport.hh>
 
 #include <opencv2/opencv.hpp>
-
 struct LaserScan{
     LaserScan(float* p, int np){
         pts = p;
