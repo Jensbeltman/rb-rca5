@@ -16,26 +16,6 @@ static boost::mutex mutex;
 static Point2f gpos(0,0);
 static double gdir = 0;
 
-void statCallback(ConstWorldStatisticsPtr &_msg) {
-  (void)_msg;
-  // Dump the message contents to stdout.
-  //  std::cout << _msg->DebugString();
-  //  std::cout << std::flush;
-}
-
-void poseCallback(ConstPosesStampedPtr &_msg) {
-  // Dump the message contents to stdout.
-  //std::cout << _msg->DebugString();
-  float scale = (72. / 25.4) * 2.;
-  for (int i = 0; i < _msg->pose_size(); i++) {
-    if (_msg->pose(i).name() == "pioneer2dx") {
-      gpos.x = _msg->pose(i).position().x() * scale ;
-      gpos.y = -_msg->pose(i).position().y() * scale;
-      gdir = 3.14 + 2 * atan2(_msg->pose(i).orientation().w(),_msg->pose(i).orientation().z());
-      break;
-    }
-  }
-}
 
 void cameraCallback(ConstImageStampedPtr &msg) {
 
@@ -52,41 +32,11 @@ void cameraCallback(ConstImageStampedPtr &msg) {
   mutex.unlock();
 }
 
-void lidarCallback(ConstLaserScanStampedPtr &msg) {
-
-  float angle_min = float(msg->scan().angle_min());
-  //  double angle_max = msg->scan().angle_max();
-  float angle_increment = float(msg->scan().angle_step());
-
-  float range_min = float(msg->scan().range_min());
-  float range_max = float(msg->scan().range_max());
-
-  int sec = msg->time().sec();
-  int nsec = msg->time().nsec();
-
-  int nranges = msg->scan().ranges_size();
-  int nintensities = msg->scan().intensities_size();
-
-  assert(nranges == nintensities);
-  float scale = (72. / 25.4) * 2;
-  int width = nranges - 1;
-  int height = range_max * scale;
-
-  cv::Mat im(height, width, CV_8UC1);
-  im.setTo(255);
-  for (int i = 0; i < nranges; i++) {
-    float range = std::min(float(msg->scan().ranges(i)), range_max);
-    cv::Point2f startpt(i,height);
-    cv::Point2f endpt(i,range*scale);
-    cv::line(im, startpt, endpt, cv::Scalar(0), 1,
-             cv::LINE_4, 0);
-  }
-  mutex.lock();
-  cv::imshow("lidar", im);
-  mutex.unlock();
-}
-
 int main(int _argc, char **_argv) {
+
+  Mat immap = imread("../models/bigworld/meshes/floor_plan.png", IMREAD_GRAYSCALE );
+  Map map(&immap, 4);
+
   // Load gazebo
   gazebo::client::setup(_argc, _argv);
 
@@ -94,23 +44,14 @@ int main(int _argc, char **_argv) {
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
   node->Init();
 
-  // Listen to Gazebo topics
-  gazebo::transport::SubscriberPtr statSubscriber =
-      node->Subscribe("~/world_stats", statCallback);
-
-  gazebo::transport::SubscriberPtr poseSubscriber =
-      node->Subscribe("~/pose/info", poseCallback);
-
   gazebo::transport::SubscriberPtr cameraSubscriber =
       node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
 
-  gazebo::transport::SubscriberPtr lidarSubscriber1 =
-      node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", lidarCallback);
-
-  LaserScanner ls;
+  gazebo::transport::SubscriberPtr poseSubscriber =
+      node->Subscribe("~/pose/info", &Map::updatePose, &map);
 
   gazebo::transport::SubscriberPtr lidarSubscriber2 =
-        node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &LaserScanner::parseScan, &ls);
+      node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &Map::parseScan, &map);
 
   // Publish to the robot vel_cmd topic
   gazebo::transport::PublisherPtr movementPublisher =
@@ -127,8 +68,6 @@ int main(int _argc, char **_argv) {
   worldPublisher->WaitForConnection();
   worldPublisher->Publish(controlMessage);
 
-  Mat immap = imread("../models/bigworld/meshes/floor_plan.png", IMREAD_GRAYSCALE );
-  Map map(&immap, 4);
 
   const int key_left = 81;
   const int key_up = 82;
@@ -141,14 +80,12 @@ int main(int _argc, char **_argv) {
 
   // Loop
   while (true) {
-    gazebo::common::Time::MSleep(10);
-
-    map.updatePose(gpos,gdir);
+    gazebo::common::Time::MSleep(50);
 
     mutex.lock();
     int key = cv::waitKey(1);
     map.show();
-    map.showLidar();
+    //map.showLidar();
     mutex.unlock();
 
     if (key == key_esc)

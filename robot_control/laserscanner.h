@@ -6,6 +6,9 @@
 #include <gazebo/transport/transport.hh>
 
 #include <opencv2/opencv.hpp>
+
+using namespace cv;
+
 struct LaserScan{
     LaserScan(float* p, int np){
         pts = p;
@@ -23,6 +26,8 @@ class LaserScanner
 public:
     LaserScanner();
     void parseScan(ConstLaserScanStampedPtr &_msg);
+    LaserScan* getScan();
+    LaserScan* generateScan(Mat* map, Point2f pos, float dir);
 
     cv::Mat visualizeScan(float px_per_m); //could be changed to int size for desired dim of img
 
@@ -36,6 +41,7 @@ private:
     int   _nranges;
 
     LaserScan* _current_scan;
+    float ray(Mat* map, Point2f p, float angle);
 
 };
 

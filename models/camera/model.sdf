@@ -27,11 +27,11 @@
       </visual>
       <sensor name="camera" type="camera">
         <camera>
-	  <noise>
+	  <!-- noise>
 	    <type>gaussian</type>
 	    <mean>0.0</mean>
-	    <stddev>0.9</stddev>
-	  </noise>
+	    <stddev>0.1</stddev>
+	  </noise -->
           <horizontal_fov>1.047</horizontal_fov>
           <image>
             <width>320</width>
