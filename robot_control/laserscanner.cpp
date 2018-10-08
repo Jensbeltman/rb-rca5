@@ -50,7 +50,7 @@ LaserScan *LaserScanner::generateScan(Mat* map, Point2f pos, float dir)
 
 float LaserScanner::ray(Mat* map, Point2f p, float angle){
     Point2f delta(cos(angle),sin(angle));
-    for(float r = 0; r < _range_max; r+=.5){
+    for(float r = 0; r < _range_max; r+=1){
         if(map->at<uchar>(p+r*delta) == 0)
             return r;
     }

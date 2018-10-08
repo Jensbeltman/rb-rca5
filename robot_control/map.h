@@ -39,11 +39,12 @@ private:
   float ray(Point2f p, float r, float angle);
 
   std::default_random_engine generator;
-  std::normal_distribution<float> distribution = std::normal_distribution<float>(1.0,0.01);
+  std::normal_distribution<float> distribution = std::normal_distribution<float>(1.0,0.5);
 
 
-  int nEst = 40;
-  Robconf rConf[40];
+  int nEst = 20;
+  Robconf rConf[20];
+  float calcScore(Robconf rc, LaserScan *ls);
 };
 
 #endif // MAP_H
