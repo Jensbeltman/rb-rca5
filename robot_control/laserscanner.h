@@ -29,7 +29,7 @@ public:
     LaserScan* getScan();
     LaserScan* generateScan(Mat* map, Point2f pos, float dir);
 
-    cv::Mat visualizeScan(float px_per_m); //could be changed to int size for desired dim of img
+    cv::Mat visualizeScan(LaserScan* ls); //could be changed to int size for desired dim of img
 
 private:
 
@@ -40,7 +40,7 @@ private:
     float _angle_increment;
     int   _nranges;
 
-    LaserScan* _current_scan;
+    LaserScan* _current_scan = new LaserScan(new float, 0);
     float ray(Mat* map, Point2f p, float angle);
 
 };
