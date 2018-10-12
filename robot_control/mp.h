@@ -24,20 +24,24 @@ class mp {
 public:
   mp();
   mp(Mat);
-  void findCorners();
+  int findCorners(Mat m, vector<corner> &);
   void drawCorners();
-  void findAreas();
-  bool isBlackBetween(Point, Point, int);
+  void findAreas(Mat, vector<corner> &, vector<Rect> &);
+  bool isBlackBetween(Mat, Point, Point, int);
   void displayMap();
   void drawRect();
+  static bool largestArea(Rect const &, Rect const &);
 
   Mat bitmap;
+  Mat bitmap_t;
   Mat display;
   Mat cornerkernel;
   Mat cornerMask;
   Mat areaMask;
   vector<corner> cnr;
+  vector<corner> cnr_t;
   vector<Rect> area;
+  vector<Rect> area_t;
 };
 
 #endif // MAP_H
