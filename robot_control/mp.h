@@ -24,9 +24,9 @@ class mp {
 public:
   mp();
   mp(Mat);
-  int findCorners(Mat m, vector<corner> &);
+  int findCorners();
   void drawCorners();
-  void findAreas(Mat, vector<corner> &, vector<Rect> &);
+  void findAreas();
   bool isBlackBetween(Mat, Point, Point, int);
   void displayMap();
   void drawRect();

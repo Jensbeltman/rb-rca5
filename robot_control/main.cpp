@@ -19,10 +19,9 @@ int main(int _argc, char **_argv) {
 
   mp krt(kort);
 
-  krt.findAreas(krt.bitmap_t, krt.cnr_t, krt.area_t);
   krt.drawRect();
   while (1) {
-	krt.displayMap();
+    krt.displayMap();
 
 	waitKey(0);
   }

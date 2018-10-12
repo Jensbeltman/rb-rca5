@@ -12,22 +12,24 @@ mp::mp(Mat src) {
   areaMask = cornerMask.clone();
   namedWindow("map", WINDOW_FREERATIO);
   resizeWindow("map", display.cols, display.rows);
+
+  findAreas();
 }
 
-int mp::findCorners(Mat m, vector<corner> &cnR) {
+int mp::findCorners() {
 
-  cnR.clear();
+  cnr_t.clear();
   corner C;
   int kVal = 0;
   int mapVal = 0;
-  for (int r = 0; r < m.rows - 1; r++) {
-	for (int c = 0; c < m.cols - 1; c++) {
+  for (int r = 0; r < bitmap_t.rows - 1; r++) {
+    for (int c = 0; c < bitmap_t.cols - 1; c++) {
 	  kVal = 0;
 
 	  for (int x = 0; x < cornerkernel.cols; x++) {
 		for (int y = 0; y < cornerkernel.rows; y++) {
 		  kVal +=
-			  cornerkernel.at<uchar>(y, x) * (m.at<uchar>(r + y, c + x) / 255);
+              cornerkernel.at<uchar>(y, x) * (bitmap_t.at<uchar>(r + y, c + x) / 255);
 		}
 	  }
 
@@ -39,7 +41,7 @@ int mp::findCorners(Mat m, vector<corner> &cnR) {
 		C.P = Point(c + 1, r + 1);
 		C.D = Point(1, 1);
 		C.type = 'i';
-		cnR.push_back(C);
+        cnr_t.push_back(C);
 		break;
 	  case 7:
 		//		arrowedLine(display, Point(c, r + 1), Point(c - aL, r +
@@ -47,7 +49,7 @@ int mp::findCorners(Mat m, vector<corner> &cnR) {
 		C.P = Point(c, r + 1);
 		C.D = Point(-1, 1);
 		C.type = 'i';
-		cnR.push_back(C);
+        cnr_t.push_back(C);
 		break;
 	  case 3:
 		//		arrowedLine(display, Point(c + 1, r), Point(c + aL, r -
@@ -55,7 +57,7 @@ int mp::findCorners(Mat m, vector<corner> &cnR) {
 		C.P = Point(c + 1, r);
 		C.D = Point(1, -1);
 		C.type = 'i';
-		cnR.push_back(C);
+        cnr_t.push_back(C);
 		break;
 	  case 1:
 		//		arrowedLine(display, Point(c, r), Point(c - aL, r - aL),
@@ -63,42 +65,15 @@ int mp::findCorners(Mat m, vector<corner> &cnR) {
 		C.P = Point(c, r);
 		C.D = Point(-1, -1);
 		C.type = 'i';
-		cnR.push_back(C);
+        cnr_t.push_back(C);
 		break;
-		//	  case 15:
-		//		//		arrowedLine(display, Point(c + 1, r +
-		// 1), Point(c + aL,
-		//		// r
-		//		//+ aL), Scalar(0, 255,
-		// 0)); 		C.P = Point(c + 1, r + 1); 		C.D =
-		// Point(1,
-		// 1); 		C.type = '0'; 		cnR.push_back(C);
-		// break; 		break; 	  case 13:
-		//		//		arrowedLine(display, Point(c, r + 1),
-		// Point(c - aL, r +
-		//		// aL), Scalar(0, 255,
-		// 0)); 		C.P = Point(c, r + 1); 		C.D = Point(-1,
-		// 1);
-		// C.type = 'o'; 		cnR.push_back(C); 		break;
-		// case 9:
-		//		//		arrowedLine(display, Point(c + 1, r),
-		// Point(c + aL, r -
-		//		// aL), Scalar(0, 255,
-		// 0)); 		C.P = Point(c + 1, r); 		C.D = Point(1,
-		// -1); C.type = 'o'; 		cnR.push_back(C);
-		// break; 	  case 11:
-		//		//		arrowedLine(display, Point(c, r),
-		// Point(c
-		//- aL, r - aL),
-		//		//					Scalar(0, 255,
-		// 0)); 		C.P = Point(c, r); 		C.D = Point(-1,
-		// -1); C.type = 'o'; 		cnR.push_back(C); 		break;
+
 	  default:
 		break;
 	  }
 	}
   }
-  return cnR.size();
+  return cnr_t.size();
 }
 
 void mp::drawCorners() {
@@ -111,18 +86,19 @@ void mp::drawCorners() {
   }
 }
 
-void mp::findAreas(Mat m, vector<corner> &cnR, vector<Rect> &A) {
-  while (findCorners(bitmap_t, cnr_t)) {
+void mp::findAreas() {
+  while (findCorners()) {
+    area_t.clear();
 
-	for (int i = 0; i < cnR.size(); i++) {
+    for (int i = 0; i < cnr_t.size(); i++) {
 
 	  int dy = 1;
 	  int dx = 0;
-	  corner *a = &cnR[i];
-	  while ((m.at<uchar>(a->P.y, a->P.x + (a->D.x * dx++))) != 0)
+      corner *a = &cnr_t[i];
+      while ((bitmap_t.at<uchar>(a->P.y, a->P.x + (a->D.x * dx++))) != 0)
 		;
 
-	  while (!isBlackBetween(m, a->P + Point(0, a->D.y * dy++),
+      while (!isBlackBetween(bitmap_t, a->P + Point(0, a->D.y * dy++),
 							 Point(a->D.x, 0), dx - 1))
 		;
 
@@ -138,21 +114,21 @@ void mp::findAreas(Mat m, vector<corner> &cnR, vector<Rect> &A) {
 		ul.y = a->P.y - (dy - 2);
 	  }
 
-	  cout << i << ":  --------------------------------------" << endl;
+      /*cout << i << ":  --------------------------------------" << endl;
 	  cout << "dxdy: " << dx << " ," << dy << endl;
 	  cout << "point a: " << a->P.x << " ," << a->P.y << endl;
 
-	  cout << "ul: " << ul.x << " ;" << ul.y << endl;
-	  A.push_back(Rect(ul, Size(dx - 1, dy - 1)));
+      cout << "ul: " << ul.x << " ;" << ul.y << endl;*/
+      area_t.push_back(Rect(ul, Size(dx - 1, dy - 1)));
 
 	  //--------------------------------------------------------------------------------
 	  dy = 0;
 	  dx = 1;
 
-	  while (m.at<uchar>(a->P.y + (a->D.y * dy++), a->P.x) != 0)
+      while (bitmap_t.at<uchar>(a->P.y + (a->D.y * dy++), a->P.x) != 0)
 		;
 
-	  while (!isBlackBetween(m, a->P + Point(a->D.x * dx++, 0),
+      while (!isBlackBetween(bitmap_t, a->P + Point(a->D.x * dx++, 0),
 							 Point(0, a->D.y), dy - 1))
 		;
 
@@ -167,13 +143,13 @@ void mp::findAreas(Mat m, vector<corner> &cnR, vector<Rect> &A) {
 		ul.y = a->P.y - (dy - 2);
 	  }
 
-	  A.push_back(Rect(ul, Size(dx - 1, dy - 1)));
+      area_t.push_back(Rect(ul, Size(dx - 1, dy - 1)));
 	}
 
-	sort(A.begin(), A.end(), &largestArea);
-	rectangle(bitmap_t, A[0], Scalar(0, 0, 0), FILLED);
-	area.push_back(A[0]);
-	A.clear();
+    sort(area_t.begin(), area_t.end(), &largestArea);
+    rectangle(bitmap_t, area_t[0], Scalar(0, 0, 0), FILLED);
+    area.push_back(area_t[0]);
+
   }
 }
 
@@ -197,6 +173,8 @@ void mp::drawRect() {
 	rectangle(display, area[i],
 			  Scalar(rand() % 235 + 20, rand() % 235 + 20, rand() % 235 + 20),
 			  FILLED);
+    imshow("map", display);
+    waitKey(0);
   }
 }
 
