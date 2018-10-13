@@ -1,5 +1,5 @@
 # Todos
-## Raport
+## Report
 - [ ] Project description 
 - [ ] Project statement and -requrierments 
 - [ ] Write down refferences on the go 
