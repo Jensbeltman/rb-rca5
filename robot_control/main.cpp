@@ -20,6 +20,7 @@ int main(int _argc, char **_argv) {
   mp krt(kort);
 
   krt.drawRect();
+  krt.findConnections();
   while (1) {
     krt.displayMap();
 

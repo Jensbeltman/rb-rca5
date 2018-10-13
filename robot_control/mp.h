@@ -27,6 +27,7 @@ public:
   int findCorners();
   void drawCorners();
   void findAreas();
+  void findConnections();
   bool isBlackBetween(Mat, Point, Point, int);
   void displayMap();
   void drawRect();
