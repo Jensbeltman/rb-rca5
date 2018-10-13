@@ -42,8 +42,8 @@ private:
   std::normal_distribution<float> distribution = std::normal_distribution<float>(1.0,4);
 
 
-  int nEst = 80;
-  Robconf rConf[80];
+  int nEst = 40;
+  Robconf rConf[40];
   float calcScore(Robconf rc, LaserScan *ls);
 };
 
