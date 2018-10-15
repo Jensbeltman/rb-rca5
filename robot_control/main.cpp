@@ -204,17 +204,23 @@ int main(int _argc, char **_argv) {
       break;
 
 
+
+    //Set value Odir from getClosestDir and set value Odist from getClosestDist
+    controller.setValues(smallest_dist, smallest_dir);
+
+
+
+
+    //Engine process here.
+    controller.process();
+
+
     //Speed = get value from speed
     speed = controller.getOutput().speed;
 
     //Steer direction = get value from Sdir
     dir = controller.getOutput().direction;
 
-    //Set value Odir from getClosestDir and set value Odist from getClosestDist
-    controller.setValues(smallest_dist, smallest_dir);
-
-    //Engine process here.
-    controller.process();
 
 
 

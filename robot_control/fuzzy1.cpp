@@ -19,9 +19,9 @@ fuzzy1::fuzzy1()
     Odist->setEnabled(true);
     Odist->setRange(0.08, 5);
     Odist->setLockValueInRange(false);
-    Odist->addTerm(new Ramp("far", 2.5, 5));
-    Odist->addTerm(new Triangle("close", 0, 2.5, 5));
-    Odist->addTerm(new Ramp("veryclose", 2.5, 0));
+    Odist->addTerm(new Ramp("far", 2.7, 5));
+    Odist->addTerm(new Triangle("close", 1.5, 2.5, 3.5));
+    Odist->addTerm(new Ramp("veryclose", 2.2, 0));
     engine->addInputVariable(Odist);
 
     //Inputvariable (direction):
@@ -32,7 +32,7 @@ fuzzy1::fuzzy1()
     Odir->setRange(-2.26, 2.26);
     Odir->setLockValueInRange(false);
     Odir->addTerm(new Ramp("left", 0, -2.26));
-    Odir->addTerm(new Triangle("center", -1.1, 0, 1.1));
+    Odir->addTerm(new Triangle("center", -1, 0, 1));
     Odir->addTerm(new Ramp("right", 0, 2.26));
     engine->addInputVariable(Odir);
 
@@ -47,9 +47,9 @@ fuzzy1::fuzzy1()
     Sdir->setDefuzzifier(new Centroid(100));
     Sdir->setDefaultValue(0);
     Sdir->setLockPreviousValue(false);
-    Sdir->addTerm(new Ramp("left", 0, -0.4));
-    Sdir->addTerm(new Triangle("straight", -0.3, 0, 0.3));
-    Sdir->addTerm(new Ramp("right", 0, 0.4));
+    Sdir->addTerm(new Ramp("left", 0, 0.4));
+    Sdir->addTerm(new Triangle("straight", -0.2, 0, 0.2));
+    Sdir->addTerm(new Ramp("right", 0, -0.4));
     engine->addOutputVariable(Sdir);
 
     //Outputvariable (speed):
