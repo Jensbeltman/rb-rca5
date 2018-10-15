@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_QML_DEBUG
 CFLAGS        = -pipe -g -std=c++11 -std=c++14 -pthread -std=c++11 -std=c++14 -pthread -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -std=c++11 -std=c++14 -pthread -std=c++11 -std=c++14 -pthread -Wall -W -fPIC $(DEFINES)
-INCPATH       = -I../robot_control -I. -isystem /usr/include/gazebo-9 -isystem /usr/include/sdformat-6.0 -isystem /usr/include/ignition/transport4 -isystem /usr/include/ignition/msgs1 -isystem /usr/include/ignition/fuel_tools1 -isystem /usr/include/x86_64-linux-gnu -I/usr/lib/x86_64-linux-gnu/libzip/include -isystem /usr/include/ignition/common1 -isystem /usr/include/ignition/math4 -isystem /usr/include/uuid -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -isystem /usr/local/include/opencv -isystem /usr/local/include -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I../robot_control -I. -I../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite -isystem /usr/include/gazebo-9 -isystem /usr/include/sdformat-6.0 -isystem /usr/include/ignition/transport4 -isystem /usr/include/ignition/msgs1 -isystem /usr/include/ignition/fuel_tools1 -isystem /usr/include/x86_64-linux-gnu -I/usr/lib/x86_64-linux-gnu/libzip/include -isystem /usr/include/ignition/common1 -isystem /usr/include/ignition/math4 -isystem /usr/include/uuid -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -isystem /usr/include/opencv -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -35,10 +35,10 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = robot_control1.0.0
-DISTDIR = /home/jens/UNI/project/rb-rca5/build-robot_control-Desktop-Debug/.tmp/robot_control1.0.0
+DISTDIR = /home/bjarke/project/rb-rca5/build-robot_control-Desktop-Debug/.tmp/robot_control1.0.0
 LINK          = g++
 LFLAGS        = 
-LIBS          = $(SUBLIBS) -L/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -Wl,-rpath,/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -lgazebo_transport -lgazebo_physics -lgazebo_sensors -lgazebo_rendering -lgazebo_gui -lgazebo_client -lgazebo_msgs -lgazebo_common -lgazebo -lboost_thread -lboost_signals -lboost_system -lboost_filesystem -lboost_program_options -lboost_regex -lboost_iostreams -lboost_date_time -lboost_chrono -lboost_atomic -lsdformat -ltbb -latomic -lignition-transport4 -luuid -lignition-msgs1 -lprotobuf -pthread -lpthread -lignition-math4 -lignition-fuel_tools1 -L/usr/local/lib -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_dnn_objdetect -lopencv_dpm -lopencv_face -lopencv_photo -lopencv_freetype -lopencv_fuzzy -lopencv_hfs -lopencv_img_hash -lopencv_line_descriptor -lopencv_optflow -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_surface_matching -lopencv_tracking -lopencv_video -lopencv_datasets -lopencv_text -lopencv_dnn -lopencv_plot -lopencv_xfeatures2d -lopencv_shape -lopencv_ml -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_highgui -lopencv_videoio -lopencv_flann -lopencv_xobjdetect -lopencv_imgcodecs -lopencv_objdetect -lopencv_xphoto -lopencv_imgproc -lopencv_core 
+LIBS          = $(SUBLIBS) -L /home/bjarke/Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/release/bin -l fuzzylite-static -L/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -Wl,-rpath,/usr/lib/x86_64-linux-gnu/gazebo-9/plugins -lgazebo_transport -lgazebo_physics -lgazebo_sensors -lgazebo_rendering -lgazebo_gui -lgazebo_client -lgazebo_msgs -lgazebo_common -lgazebo -lboost_thread -lboost_signals -lboost_system -lboost_filesystem -lboost_program_options -lboost_regex -lboost_iostreams -lboost_date_time -lboost_chrono -lboost_atomic -lsdformat -ltbb -latomic -lignition-transport4 -luuid -lignition-msgs1 -lprotobuf -pthread -lpthread -lignition-math4 -lignition-fuel_tools1 -lopencv_shape -lopencv_stitching -lopencv_superres -lopencv_videostab -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_datasets -lopencv_dpm -lopencv_face -lopencv_freetype -lopencv_fuzzy -lopencv_hdf -lopencv_line_descriptor -lopencv_optflow -lopencv_video -lopencv_plot -lopencv_reg -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_rgbd -lopencv_viz -lopencv_surface_matching -lopencv_text -lopencv_ximgproc -lopencv_calib3d -lopencv_features2d -lopencv_flann -lopencv_xobjdetect -lopencv_objdetect -lopencv_ml -lopencv_xphoto -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs -lopencv_photo -lopencv_imgproc -lopencv_core 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -50,8 +50,10 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../robot_control/main.cpp 
-OBJECTS       = main.o
+SOURCES       = ../robot_control/main.cpp \
+		../robot_control/fuzzy1.cpp 
+OBJECTS       = main.o \
+		fuzzy1.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -91,10 +93,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformcompositor_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qml.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qmltest.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quick.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quickwidgets.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_service_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
@@ -110,6 +108,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
+		../robot_control/.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -124,7 +123,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		../robot_control/robot_control.pro  ../robot_control/main.cpp
+		../robot_control/robot_control.pro fuzzy1.h ../robot_control/main.cpp \
+		../robot_control/fuzzy1.cpp
 QMAKE_TARGET  = robot_control
 DESTDIR       = 
 TARGET        = robot_control
@@ -175,10 +175,6 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformcompositor_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qml.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qmltest.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quick.pri \
-		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quickwidgets.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_service_support_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri \
@@ -194,6 +190,7 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -249,10 +246,6 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_platformcompositor_support_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_printsupport_private.pri:
-/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qml.pri:
-/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_qmltest.pri:
-/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quick.pri:
-/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_quickwidgets.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_service_support_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_sql_private.pri:
@@ -268,6 +261,7 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf:
+.qmake.stash:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf:
@@ -326,8 +320,229 @@ compiler_clean:
 
 ####### Compile
 
-main.o: ../robot_control/main.cpp 
+main.o: ../robot_control/main.cpp ../robot_control/fuzzy1.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Headers.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/fuzzylite.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Benchmark.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Complexity.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FldExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/Exporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Console.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Engine.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Exception.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Activation.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/First.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/General.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Highest.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Last.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Lowest.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Proportional.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Threshold.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Bisector.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/IntegralDefuzzifier.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Defuzzifier.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Centroid.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/SmallestOfMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/LargestOfMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/MeanOfMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedAverage.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedDefuzzifier.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/ActivationFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/ConstructionFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Hedge.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/SNorm.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/Norm.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/TNorm.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Term.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Operation.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/CloningFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/FactoryManager.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/TNormFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/SNormFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/DefuzzifierFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/TermFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/HedgeFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/FunctionFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Function.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/CppExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FclImporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/Importer.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FclExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FisImporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FisExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FllImporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FllExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/JavaExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/RScriptExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Any.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Extremely.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/HedgeFunction.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Not.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Seldom.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Somewhat.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Very.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/AlgebraicSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/BoundedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/DrasticSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/EinsteinSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/HamacherSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/Maximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/NilpotentMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/NormalizedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/SNormFunction.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/UnboundedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/AlgebraicProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/BoundedDifference.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/DrasticProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/EinsteinProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/HamacherProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/Minimum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/NilpotentMinimum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/TNormFunction.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Antecedent.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Consequent.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Rule.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/RuleBlock.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Expression.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Aggregated.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Activated.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Bell.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Binary.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Concave.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Constant.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Cosine.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Discrete.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Gaussian.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/GaussianProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Linear.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/PiShape.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Ramp.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Rectangle.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/SShape.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Sigmoid.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/SigmoidDifference.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/SigmoidProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Spike.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Trapezoid.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Triangle.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/ZShape.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/InputVariable.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/Variable.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/OutputVariable.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../robot_control/main.cpp
+
+fuzzy1.o: ../robot_control/fuzzy1.cpp ../robot_control/fuzzy1.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Headers.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/fuzzylite.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Benchmark.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Complexity.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FldExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/Exporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Console.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Engine.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Exception.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Activation.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/First.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/General.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Highest.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Last.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Lowest.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Proportional.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/activation/Threshold.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Bisector.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/IntegralDefuzzifier.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Defuzzifier.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/Centroid.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/SmallestOfMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/LargestOfMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/MeanOfMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedAverage.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedDefuzzifier.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/defuzzifier/WeightedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/ActivationFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/ConstructionFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Hedge.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/SNorm.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/Norm.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/TNorm.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Term.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/Operation.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/CloningFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/FactoryManager.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/TNormFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/SNormFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/DefuzzifierFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/TermFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/HedgeFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/factory/FunctionFactory.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Function.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/CppExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FclImporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/Importer.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FclExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FisImporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FisExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FllImporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/FllExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/JavaExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/imex/RScriptExporter.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Any.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Extremely.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/HedgeFunction.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Not.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Seldom.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Somewhat.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/hedge/Very.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/AlgebraicSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/BoundedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/DrasticSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/EinsteinSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/HamacherSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/Maximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/NilpotentMaximum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/NormalizedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/SNormFunction.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/s/UnboundedSum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/AlgebraicProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/BoundedDifference.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/DrasticProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/EinsteinProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/HamacherProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/Minimum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/NilpotentMinimum.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/norm/t/TNormFunction.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Antecedent.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Consequent.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Rule.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/RuleBlock.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/rule/Expression.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Aggregated.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Activated.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Bell.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Binary.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Concave.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Constant.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Cosine.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Discrete.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Gaussian.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/GaussianProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Linear.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/PiShape.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Ramp.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Rectangle.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/SShape.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Sigmoid.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/SigmoidDifference.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/SigmoidProduct.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Spike.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Trapezoid.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/Triangle.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/term/ZShape.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/InputVariable.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/Variable.h \
+		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/OutputVariable.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o fuzzy1.o ../robot_control/fuzzy1.cpp
 
 ####### Install
 

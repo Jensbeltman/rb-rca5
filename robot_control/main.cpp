@@ -7,6 +7,8 @@
 #include <iostream>
 using namespace cv;
 
+#include "fuzzy1.h"
+
 static boost::mutex mutex;
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
@@ -49,6 +51,10 @@ void cameraCallback(ConstImageStampedPtr &msg) {
   cv::imshow("camera", im);
   mutex.unlock();
 }
+
+/*TEST PLACEMENT*/
+float smallest_dist;
+float smallest_dir;
 
 void lidarCallback(ConstLaserScanStampedPtr &msg) {
 
@@ -95,7 +101,48 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
   mutex.lock();
   cv::imshow("lidar", im);
   mutex.unlock();
+
+
+  /*****TEST PLACEMENT*****/
+  smallest_dist = msg->scan().ranges(0);
+  smallest_dir = msg->scan().angle_min();
+  float new_angle = smallest_dir;
+  for (int i = 0; i < msg->scan().ranges_size(); i++) {
+      smallest_dist = (smallest_dist < msg->scan().ranges(i)) ? smallest_dist : msg->scan().ranges(i);
+      new_angle = new_angle + msg->scan().angle_step();
+      smallest_dir = (smallest_dist < msg->scan().ranges(i)) ? smallest_dir : new_angle;
+  }
 }
+
+/*
+float getClosestDir(ConstLaserScanStampedPtr &msg) {
+    float smallest_dist = msg->scan().ranges(0);
+    float smallest_dir = msg->scan().angle_min();
+    float new_angle = smallest_dir;
+    for (int i = 0; i < msg->scan().ranges_size(); i++) {
+        smallest_dist = (smallest_dist < msg->scan().ranges(i)) ? smallest_dist : msg->scan().ranges(i);
+        new_angle = new_angle + msg->scan().angle_step();
+        smallest_dir = (smallest_dist < msg->scan().ranges(i)) ? smallest_dir : new_angle;
+    }
+  //  std::cout << "Smallest distance: " << smallest_dist << " Smallest direction: " << smallest_dir << std::endl;
+
+    return smallest_dir;
+}
+
+float getClosestDist(ConstLaserScanStampedPtr & msg) {
+    float smallest_dist = msg->scan().ranges(0);
+    float smallest_dir = msg->scan().angle_min();
+    float new_angle = smallest_dir;
+    for (int i = 0; i < msg->scan().ranges_size(); i++) {
+        smallest_dist = (smallest_dist < msg->scan().ranges(i)) ? smallest_dist : msg->scan().ranges(i);
+        new_angle = new_angle + msg->scan().angle_step();
+        smallest_dir = (smallest_dist < msg->scan().ranges(i)) ? smallest_dir : new_angle;
+    }
+  //  std::cout << "Smallest distance: " << smallest_dist << " Smallest direction: " << smallest_dir << std::endl;
+
+    return smallest_dist;
+}
+*/
 
 int main(int _argc, char **_argv) {
   // Load gazebo
@@ -109,8 +156,8 @@ int main(int _argc, char **_argv) {
   gazebo::transport::SubscriberPtr statSubscriber =
       node->Subscribe("~/world_stats", statCallback);
 
-  gazebo::transport::SubscriberPtr poseSubscriber =
-      node->Subscribe("~/pose/info", poseCallback);
+//  gazebo::transport::SubscriberPtr poseSubscriber =
+//      node->Subscribe("~/pose/info", poseCallback);
 
   gazebo::transport::SubscriberPtr cameraSubscriber =
       node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
@@ -130,14 +177,20 @@ int main(int _argc, char **_argv) {
   worldPublisher->WaitForConnection();
   worldPublisher->Publish(controlMessage);
 
+
   const int key_left = 81;
   const int key_up = 82;
   const int key_down = 84;
   const int key_right = 83;
+
   const int key_esc = 27;
 
   float speed = 0.0;
   float dir = 0.0;
+
+
+  //Initialise the controller
+  fuzzy1 controller;
 
   // Loop
   while (true) {
@@ -149,6 +202,21 @@ int main(int _argc, char **_argv) {
 
     if (key == key_esc)
       break;
+
+
+    //Speed = get value from speed
+    speed = controller.getOutput().speed;
+
+    //Steer direction = get value from Sdir
+    dir = controller.getOutput().direction;
+
+    //Set value Odir from getClosestDir and set value Odist from getClosestDist
+    controller.setValues(smallest_dist, smallest_dir);
+
+    //Engine process here.
+    controller.process();
+
+
 
     if ((key == key_up) && (speed <= 1.2f))
       speed += 0.05;
@@ -163,6 +231,8 @@ int main(int _argc, char **_argv) {
       //      speed *= 0.1;
       //      dir *= 0.1;
     }
+
+
 
     // Generate a pose
     ignition::math::Pose3d pose(double(speed), 0, 0, 0, 0, double(dir));
