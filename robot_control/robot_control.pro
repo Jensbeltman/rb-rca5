@@ -4,14 +4,20 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += main.cpp \
-    fuzzy1.cpp
+    fuzzy1.cpp \
+    buffer.cpp \
+    circledetect.cpp \
+    fuzzy2.cpp
 
 CONFIG += link_pkgconfig
 PKGCONFIG += gazebo
 PKGCONFIG += opencv
 
 HEADERS += \
-    fuzzy1.h
+    fuzzy1.h \
+    buffer.h \
+    circledetect.h \
+    fuzzy2.h
 
 INCLUDEPATH += /home/bjarke/Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/
 

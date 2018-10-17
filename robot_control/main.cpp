@@ -5,14 +5,20 @@
 #include <opencv2/opencv.hpp>
 
 #include <iostream>
+#include <vector>
 
 using namespace cv;
 
 #include "fuzzy1.h"
+#include "fuzzy2.h"
+#include "circledetect.h"
 
 static boost::mutex mutex;
 
 
+//bool marblePresent = false;
+bool allBlue = false;
+int marbleDist = 0;
 
 void trackRobot(ConstPosesStampedPtr &msg) {
     Mat _map = imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
@@ -61,7 +67,7 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
     }
   }
 }
-
+circleDetect findCircles;
 void cameraCallback(ConstImageStampedPtr &msg) {
 
   std::size_t width = msg->image().width();
@@ -71,6 +77,32 @@ void cameraCallback(ConstImageStampedPtr &msg) {
 
   im = im.clone();
   cv::cvtColor(im, im, COLOR_BGR2RGB);
+    //cvtColor(im, im, COLOR_BGR2GRAY);
+
+  // Marble detection
+  //marble_detection detect;
+  //detect.searchForMarbles(&im);
+    /*
+    GaussianBlur(im, im, Size(9, 9), 2, 2);
+    std::vector<Vec3f> circles;
+    HoughCircles(im, circles, HOUGH_GRADIENT, 1, im.rows/8, 50, 25, 0, 0);
+
+    for (size_t i = 0; i < circles.size(); i++) {
+        Point center(cvRound(circles[i][0]),cvRound(circles[i][1]));
+        int radius = cvRound(circles[i][2]);
+        //Center
+        circle(im, center, 3, Scalar(255), -1, 8, 0);
+        //Outline
+        circle(im, center, radius, Scalar(255), 3, 8, 0);
+    }
+*/
+
+    if (findCircles.getAmountBlue(im) > 400)
+        allBlue = true;
+    else
+        allBlue = false;
+    marbleDist = findCircles.search(im);
+
 
   mutex.lock();
   cv::imshow("camera", im);
@@ -216,7 +248,7 @@ int main(int _argc, char **_argv) {
 
   //Initialise the controller
   fuzzy1 controller;
-
+  fuzzy2 controller2;
 
   // Loop
   while (true) {
@@ -231,21 +263,35 @@ int main(int _argc, char **_argv) {
 
 
 
-    //Set value Odir from getClosestDir and set value Odist from getClosestDist
-    controller.setValues(smallest_dist, smallest_dir);
+    //Determine if a marble is present.
+    if (marbleDist) {
+        controller2.setValues(smallest_dist, smallest_dir, marbleDist);
+
+        controller2.process();
+
+        speed = controller2.getOutput().speed;
+
+        dir = controller2.getOutput().direction;
+    } else if (allBlue) {
+        speed = speed;
+        dir = 0;
+        std::cout << "No AI" << std::endl;
+    } else {
+        //Set value Odir from getClosestDir and set value Odist from getClosestDist
+        controller.setValues(smallest_dist, smallest_dir);
+
+        //Engine process here.
+        controller.process();
+
+        //Speed = get value from speed
+        speed = controller.getOutput().speed;
+
+        //Steer direction = get value from Sdir
+        dir = controller.getOutput().direction;
+    }
 
 
 
-
-    //Engine process here.
-    controller.process();
-
-
-    //Speed = get value from speed
-    speed = controller.getOutput().speed;
-
-    //Steer direction = get value from Sdir
-    dir = controller.getOutput().direction;
 
 
 
