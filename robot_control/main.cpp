@@ -5,11 +5,36 @@
 #include <opencv2/opencv.hpp>
 
 #include <iostream>
+
 using namespace cv;
 
 #include "fuzzy1.h"
 
 static boost::mutex mutex;
+
+
+
+void trackRobot(ConstPosesStampedPtr &msg) {
+    Mat _map = imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
+    int init_x = _map.cols;
+    int init_y = _map.rows;
+    float x = 0;
+    float y = 0;
+    Mat doubleMap(_map.rows*2, _map.cols*2, CV_8UC3, Scalar(0, 0, 0));
+    resize(_map, doubleMap, doubleMap.size(), 0, 0, INTER_NEAREST);
+
+    for (int i = 0; i < msg->pose_size(); i++) {
+        if (msg->pose(i).name() == "pioneer2dx") {
+            x = msg->pose(i).position().x()*72/25.4;//*0.5;
+            y = -1*msg->pose(i).position().y()*72/25.4;//*0.5;
+        }
+    }
+    doubleMap.at<Vec3b>(init_y + y , init_x + x) = {0, 0, 150};
+
+    mutex.lock();
+    imshow("MapTracking", doubleMap);
+    mutex.unlock();
+}
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
   (void)_msg;
@@ -28,10 +53,10 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
       std::cout << std::setprecision(2) << std::fixed << std::setw(6)
                 << _msg->pose(i).position().x() << std::setw(6)
                 << _msg->pose(i).position().y() << std::setw(6)
-                << _msg->pose(i).position().z() << std::setw(6)
+                //<< _msg->pose(i).position().z() << std::setw(6)
                 << _msg->pose(i).orientation().w() << std::setw(6)
-                << _msg->pose(i).orientation().x() << std::setw(6)
-                << _msg->pose(i).orientation().y() << std::setw(6)
+                //<< _msg->pose(i).orientation().x() << std::setw(6)
+                //<< _msg->pose(i).orientation().y() << std::setw(6)
                 << _msg->pose(i).orientation().z() << std::endl;
     }
   }
@@ -156,8 +181,8 @@ int main(int _argc, char **_argv) {
   gazebo::transport::SubscriberPtr statSubscriber =
       node->Subscribe("~/world_stats", statCallback);
 
-//  gazebo::transport::SubscriberPtr poseSubscriber =
-//      node->Subscribe("~/pose/info", poseCallback);
+  gazebo::transport::SubscriberPtr poseSubscriber =
+      node->Subscribe("~/pose/info", trackRobot);//poseCallback, trackRobot);
 
   gazebo::transport::SubscriberPtr cameraSubscriber =
       node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
@@ -177,12 +202,12 @@ int main(int _argc, char **_argv) {
   worldPublisher->WaitForConnection();
   worldPublisher->Publish(controlMessage);
 
-
+/*
   const int key_left = 81;
   const int key_up = 82;
   const int key_down = 84;
   const int key_right = 83;
-
+*/
   const int key_esc = 27;
 
   float speed = 0.0;
@@ -191,6 +216,7 @@ int main(int _argc, char **_argv) {
 
   //Initialise the controller
   fuzzy1 controller;
+
 
   // Loop
   while (true) {
@@ -223,7 +249,7 @@ int main(int _argc, char **_argv) {
 
 
 
-
+/*
     if ((key == key_up) && (speed <= 1.2f))
       speed += 0.05;
     else if ((key == key_down) && (speed >= -1.2f))
@@ -237,7 +263,7 @@ int main(int _argc, char **_argv) {
       //      speed *= 0.1;
       //      dir *= 0.1;
     }
-
+*/
 
 
     // Generate a pose
