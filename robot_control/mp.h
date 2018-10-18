@@ -6,6 +6,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 
@@ -16,7 +17,17 @@ struct corner {
   Point P;
   Point D;
   char type;
+  int seenBy = 0;
+  float score = 0;
 };
+
+struct vispos {
+    Point pos;
+    float score;
+    vector<int> corners;
+};
+
+
 using namespace std;
 using namespace cv;
 
@@ -24,13 +35,15 @@ class mp {
 public:
   mp();
   mp(Mat);
-  int findCorners();
+  int findCorners(Mat map);
   void drawCorners();
   void findAreas();
   void findConnections();
   bool isBlackBetween(Mat, Point, Point, int);
   void displayMap();
+  void connectCorners();
   void drawRect();
+  void brushfire();
   static bool largestArea(Rect const &, Rect const &);
 
   Mat bitmap;

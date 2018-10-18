@@ -10,26 +10,26 @@ mp::mp(Mat src) {
   resize(src,display,src.size()*4,0,0,INTER_NEAREST);
   cornerMask = Mat::zeros(display.rows, display.cols, CV_8UC3);
   areaMask = cornerMask.clone();
-  namedWindow("map", WINDOW_FREERATIO);
+  namedWindow("map", WINDOW_AUTOSIZE);
   resizeWindow("map", display.cols, display.rows);
 
-  findAreas();
+  //findAreas();
 }
 
-int mp::findCorners() {
+int mp::findCorners(Mat map) {
 
   cnr_t.clear();
   corner C;
   int kVal = 0;
   int mapVal = 0;
-  for (int r = 0; r < bitmap_t.rows - 1; r++) {
-    for (int c = 0; c < bitmap_t.cols - 1; c++) {
+  for (int r = 0; r < map.rows - 1; r++) {
+    for (int c = 0; c < map.cols - 1; c++) {
       kVal = 0;
 
       for (int x = 0; x < cornerkernel.cols; x++) {
         for (int y = 0; y < cornerkernel.rows; y++) {
           kVal +=
-              cornerkernel.at<uchar>(y, x) * (bitmap_t.at<uchar>(r + y, c + x) / 255);
+              cornerkernel.at<uchar>(y, x) * (map.at<uchar>(r + y, c + x) / 255);
         }
       }
 
@@ -86,8 +86,319 @@ void mp::drawCorners() {
   }
 }
 
+void mp::connectCorners(){
+    findCorners(bitmap);
+    int rows = bitmap.rows;
+    int cols = bitmap.cols;
+    int maxc = 0;
+
+    vector<vispos> vps;
+
+    //vector<corner> cnrt();
+    //vector<corner*> cnr_ptr();
+    /*for(int i = 0; i < cnr_t.size(); i++){
+        cnr_ptr[i] = &cnr_t[i];
+    }*/
+
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if(bitmap.at<uchar>(r,c) != 0){
+                int count = 0;
+
+                vispos cvp;
+                cvp.pos = Point(c,r);
+
+                for(int i = 0; i < cnr_t.size(); i++){
+                    LineIterator li(bitmap, Point(c,r), cnr_t[i].P, 4);
+                    if(li.count < 40) {
+                        bool connected = true;
+
+                        for(int j = 0; j < li.count; j++,++li){
+
+                            if(**li == 0){
+                                connected = false;
+                                break;
+                            }
+                        }
+                        if(connected){
+                            cvp.corners.push_back(i);
+                            count += 16;
+                            cnr_t[i].seenBy++;
+                        }
+                    }
+                }
+                vps.push_back(cvp);
+
+                if(count > 255) count = 255;
+                maxc = max(maxc, count);
+                rectangle(display, Point(4*c,4*r),Point(4*c+3,4*r+3),Scalar(255-count,255-count,255),FILLED);
+            }
+        }
+    }
+    cout << endl;
+    cout << "display";
+    imshow("map", display);
+    waitKey(0);
+
+    vector<corner> cnrrem(cnr_t);
+
+
+    // copy vector to sort
+    vector<corner> cnrt(cnr_t);
+    sort(cnrt.begin(),cnrt.end(),[](corner a, corner b){
+        return a.seenBy > b.seenBy;
+    });
+    // find shit and scale and normalize score
+    int   shift = cnrt[cnrt.size()-1].seenBy;
+    float scale = 1/ (cnrt[0].seenBy - shift);
+
+    for(int i = 0; i < cnrt.size(); i++){
+        cout <<  setw(5) << cnrt[i].seenBy << "  |"<<  setw(5) << setprecision(2) << fixed << 2 - cnrt[i].seenBy/(float)cnrt[0].seenBy  << "  |  " << cnrt[i].P  <<endl ;
+        cnr_t[i].score = 0.001 - (cnr_t[i].seenBy-shift)*scale;
+    }
+
+    vector<Point> spots;
+
+    while(true){
+
+        resize(bitmap,display,bitmap.size()*4,0,0,INTER_NEAREST);
+
+        for(int i = 0; i < vps.size(); i++){
+            float score = 0;
+            int p = 0;
+            for(int j = 0; j < vps[i].corners.size(); j++){
+                float ts = cnr_t[vps[i].corners[j]].score;
+                if(ts > 0){
+                    score += ts;
+                    p++;
+                }
+            }
+            vps[i].score = score * pow(0.9,p);
+        }
+
+        sort(vps.begin(),vps.end(),[](vispos a, vispos b){
+            return a.score > b.score;
+        });
+        if(vps[0].score == 0){break;}
+        scale = 255 / vps[0].score;
+        for(int i = 0; i < vps.size(); i++){
+            //cout <<  setw(5) << vps[i].score << "  |" << vps[i].pos  <<endl ;
+            int x = vps[i].pos.x;
+            int y = vps[i].pos.y;
+            int color = vps[i].score * scale;
+            rectangle(display, Point(4*x,4*y),Point(4*x+3,4*y+3),Scalar(255,255-color,255-color),FILLED);
+        }
+        spots.push_back(vps[0].pos*4);
+        for(int i = 0; i < spots.size(); i++){
+            circle(display,spots[i],2,Scalar(0,0,255),FILLED);
+        }
+
+        for(int i = 0; i < vps[0].corners.size(); i++){
+            cnr_t[vps[0].corners[i]].score = 0;
+        }
+        cout << endl;
+        cout << "display";
+
+        imshow("map", display);
+        waitKey(0);
+
+    }
+
+}
+
+bool sort_point(Point a, Point b){
+    if(a.x == b.x)
+        return a.y < b.y;
+    return a.x < b.x;
+}
+
+
+void mp::brushfire(){
+
+    // brush fire begin
+    vector<Point> cps;
+    vector<Point> t_cps;
+    vector<Point> peaks;
+
+    int rows = display.rows;
+    int cols = display.cols;
+
+    for (int r = 3; r < rows-2; r++) {
+        for (int c = 3; c < cols-2; c++) {
+            if(display.at<Vec3b>(r,c)[2] == 0){
+                cps.push_back(Point(c,r));
+            }
+        }
+    }
+    int color = 254;
+    while(cps.size() > 0) {
+        for(int i = 0; i < cps.size(); i++){
+            bool inserted = false;
+            for(int dx = -1; dx < 2; dx++){
+                for(int dy = -1; dy < 2; dy++){
+                    if(dx != 0 || dy !=0){
+                        Point p(cps[i].x+dx,cps[i].y+dy);
+                        auto pixel = display.at<Vec3b>(p)[2];
+                        if(pixel == 255){
+                            display.at<Vec3b>(p) = Vec3b(0,127+(255-color)/2,color/2);
+                            t_cps.push_back(p);
+                            inserted = true;
+                        }if(pixel == color/2 || pixel == 0) inserted = true;
+                    }
+                }
+            }
+            if(!inserted){
+                peaks.push_back(cps[i]);
+                //display.at<Vec3b>(cps[i]) = Vec3b(254,1,1);
+            }
+
+        }
+        color-=5;
+        cps = t_cps;
+        t_cps.clear();
+        cout << endl;
+        cout << "display brushfire";
+        imshow("map", display);
+        waitKey(20);
+    }
+
+    // brush fire done
+
+    sort( peaks.begin(), peaks.end() , &sort_point );
+    peaks.erase( unique( peaks.begin(), peaks.end() ), peaks.end() );
+
+    for(int i = 0; i < peaks.size(); i++){
+      //  display.at<Vec3b>(peaks[i]) = Vec3b(255,255,255);
+    }
+
+    // identify line segments
+    vector<vector<Point>> lines;
+
+    while(peaks.size() > 1){
+
+        Point sp(peaks[0]);
+        Point cp(sp);
+        peaks.erase(peaks.begin());
+
+        for(auto ittr = peaks.begin(); ittr != peaks.end(); ittr++){
+            Point tp = *ittr;
+            if( abs(tp.x-cp.x) <= 2 && abs(tp.y-cp.y) <= 2){
+                cp = tp;
+                peaks.erase(ittr);
+                ittr = peaks.begin();
+            }
+        }
+
+        if(cp != sp){
+            lines.push_back(vector<Point>());
+            lines[lines.size() - 1].push_back(sp);
+            lines[lines.size() - 1].push_back(cp/*-Point(1,1)*/);
+        };
+    }
+
+    int test = 0;
+    auto ittr = lines.begin();
+    while( ittr != lines.end()){
+        test++;
+        ittr++;
+        Point a = (*ittr).at(0);
+        Point b = (*ittr).at(1);
+        double n = norm(a-b);
+        if(n < 4){
+            ittr = lines.erase(ittr);
+        }
+
+
+        if(ittr == lines.end()) cout << "\n\n DONE! \n\n";
+    }
+
+    // draw line segments
+    for(int i = 0; i < lines.size(); i++){
+        //line(display,lines[i][0],lines[i][1],Scalar(rand() % 235 + 20, rand() % 235 + 20, rand() % 235 + 20),2);
+        line(display,lines[i][0],lines[i][1],Scalar(255,255,255),2);
+        imshow("map", display);
+        waitKey(20);
+    }
+
+    // some new
+    for(int i = 0; i < lines.size(); i++){
+        float dgmin0 = 70;
+        float dgmin1 = 70;
+        Point pgi0(0,0);
+        Point pgj0(0,0);
+        Point pgi1(0,0);
+        Point pgj1(0,0);
+        for(int j = 0; j < lines.size(); j++){
+            if(i == j) continue;
+            int d0 = norm(lines[i][0]-lines[j][0]);
+            int d1 = norm(lines[i][0]-lines[j][1]);
+            int d2 = norm(lines[i][1]-lines[j][0]);
+            int d3 = norm(lines[i][1]-lines[j][1]);
+            double dmin = min({d0,d1,d2,d3});
+
+            if(dmin < dgmin0 || dmin < dgmin1){
+                Point pi;
+                Point pj;
+                int n = -1;
+
+                if(d0 == dmin && dmin < dgmin0){
+                    pi = lines[i][0];
+                    pj = lines[j][0];
+                    n  = 0;
+                    dgmin0 = dmin;
+                } else if(d1 == dmin && dmin < dgmin0){
+                    pi = lines[i][0];
+                    pj = lines[j][1];
+                    n  = 0;
+                    dgmin0 = dmin;
+                } else if(d2 == dmin && dmin < dgmin1){
+                    pi = lines[i][1];
+                    pj = lines[j][0];
+                    n  = 1;
+                    dgmin1 = dmin;
+                } else if(d3 == dmin && dmin < dgmin1){
+                    pi = lines[i][1];
+                    pj = lines[j][1];
+                    n  = 1;
+                    dgmin1 = dmin;
+                }
+                if(n != -1){
+                    LineIterator li(display, pi, pj, 4);
+                    bool connected = true;
+
+                    for(int q = 0; q < li.count; q++,++li){
+                        if(((const Vec<uchar,3>) *li)[2] == 0){
+                            connected = false;
+                            break;
+                        }
+                    }
+
+                    if(connected ){
+                        if(n == 0){
+                            pgi0 = pi;
+                            pgj0 = pj;
+                        } else {
+                            pgi1 = pi;
+                            pgj1 = pj;
+                        }
+                    }
+                }
+            }
+        }
+        if(norm(pgi0-pgj0) < norm(pgi1-pgj0) && pgi0.x != 0) {
+            line(display,pgi0,pgj0,Scalar(255,255,255),2);
+        }
+        if(norm(pgi1-pgj1) < norm(pgi0-pgj1) && pgi1.x != 0) line(display,pgi1,pgj1,Scalar(255,255,255),2);
+        imshow("map", display);
+        waitKey(20);
+    }
+
+    cout << "\n\n -- BF DONE -- \n\n";
+
+}
+
 void mp::findAreas() {
-  while (findCorners()) {
+  while (findCorners(bitmap_t)) {
     area_t.clear();
 
     for (int i = 0; i < cnr_t.size(); i++) {
