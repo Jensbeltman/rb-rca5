@@ -46,7 +46,6 @@ public:
     unsigned int size();
 
     T at(int i);
-    T &operator[](int i);
 	
 private:
 	
@@ -75,7 +74,7 @@ private:
     void doubleWithLeftChild(AvlNode<T> * & k3);
     void doubleWithRightChild(AvlNode<T> * & k1);
 
-    T at(int* i, AvlNode<T> *t);
+    AvlNode<T>* at(int* i, AvlNode<T> *t);
 	
 };
 

@@ -17,13 +17,14 @@ Graph::Graph()
 
 void Graph::remove(Point v)
 {
-   /* vertex vtx = vertices.
-    for(int
-        )*/
+    vertex* vtx = vertices.find(new vertex(v.x,v.y));
+   // for(int i = 0; i < vtx->adj.size(); i++);
+        //vertices.find(vtx->adj[i]).adj.remove(vtx);
+    vertices.remove(vtx);
 }
 
 void Graph::add(Point v)
 {
-    vertices.insert(vertex(v.x,v.y));
+    vertices.insert(new vertex(v.x,v.y));
 }
 

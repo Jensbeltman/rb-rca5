@@ -80,7 +80,7 @@ public:
     void connect(cv::Point v, cv::Point u, double weight);
 
 private:
-    AvlTree<vertex> vertices;
+    AvlTree<vertex*> vertices;
 };
 
 #endif // GRAPH_H

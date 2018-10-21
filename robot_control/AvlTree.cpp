@@ -95,14 +95,10 @@ template<typename T>
 T AvlTree<T>::at(int i)
 {
     int ip = i;
-    at(&ip, root);
+    AvlNode<T> * ret = at(&ip, root);
+    return ret->element;
 }
 
-/*template<typename T>
-T &&AvlTree<>::operator[](int i)
-{
-
-}*/
 template <typename T>
 void AvlTree<T>::insert(const T& x, AvlNode<T> * & t)
 {
@@ -289,22 +285,18 @@ void AvlTree<T>::doubleWithRightChild(AvlNode<T> * & k1)
 }
 
 template<typename T>
-int AvlTree<T>::at(int i, AvlNode<T> *t, T &el)
+AvlNode<T>* AvlTree<T>::at(int* i, AvlNode<T> *t)
 {
-    if (t != nullptr){
+    if (t == nullptr || *i < 0) return nullptr;
 
-        if(i == 0) {
-            el = t->element;
-            return i;
-        }
-        *i = *i - 1;
-
-        i = at(i,t->left);
-        if(i>0)
-        i = at(i,t->right);
-    }else {
-        return i;
+    if(*i == 0) {
+        return t;
     }
+    *i = *i - 1;
+    AvlNode<T>* ret;
+    ret = at(i,t->left);
+    if(ret != nullptr) return ret;
+    return at(i,t->right);
 }
 
 

@@ -256,8 +256,8 @@ void mp::brushfire(){
         color-=5;
         cps = t_cps;
         t_cps.clear();
-        cout << endl;
-        cout << "display brushfire";
+        //cout << endl;
+        //cout << "display brushfire";
         imshow("map", display);
         waitKey(20);
     }

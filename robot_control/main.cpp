@@ -11,17 +11,56 @@
 #include "mp.h"
 
 #include "AvlTree.h"
+#include "indxavltree.h"
+
 #include "graph.h"
 
 
 
 using namespace std;
-// using namespace cv;
+using namespace cv;
+
+bool operator==(const cv::Point& l, const cv::Point& r)
+{
+    return (l.x == r.x && l.x == r.y);
+}
+
+bool operator<(const Point& l, const Point& r)
+{
+    if(l.x == r.x)
+        return (l.y < r.y);
+    return (l.x < r.x);
+}
+
+bool operator>(const Point& l, const Point& r)
+{
+    if(l.x == r.x)
+        return (l.y > r.y);
+    return (l.x > r.x);
+}
 
 int main(int _argc, char **_argv) {
 
 
-    AvlTree<edge> tree;
+    IndxAvlTree<int, float> adj;
+
+    adj.insert(1,4.9);
+    adj.insert(2,3.4);
+    adj.insert(3,5.7);
+    adj.insert(4,1.5);
+    adj.insert(5,3.4);
+    adj.insert(6,3.9);
+    adj.insert(7,5.4);
+    adj.insert(8,1.7);
+    adj.insert(9,3.5);
+    adj.insert(10,4.4);
+
+    adj.printTree();
+
+    cout << adj.at(5)->data << endl;
+
+
+    /*AvlTree<edge> tree;
 
     vertex a(2,3);
     vertex b(3,3);
@@ -40,30 +79,36 @@ int main(int _argc, char **_argv) {
     tree.insert(edge(&e,4.2));
     tree.insert(edge(&f,2.1));
 
-    tree.printTree();
+    adj.insert(Point(4,9),4.9);
+    adj.insert(Point(3,4),3.4);
+    adj.insert(Point(5,7),5.7);
+    adj.insert(Point(1,5),1.5);
+    adj.insert(Point(3,4),3.4);
 
     if(tree.contains(edge(&f,2.1))) cout << "\n\nFound it\n\n";
 
-    AvlTree<vertex> vertices;
+    AvlTree<vertex*> vertices;
 
-    vertices.insert(a);
-    vertices.insert(b);
-    vertices.insert(c);
-    vertices.insert(d);
-    vertices.insert(e);
-    vertices.insert(f);
+    vertices.insert(&a);
+    vertices.insert(&b);
+    vertices.insert(&c);
+    vertices.insert(&d);
+    vertices.insert(&e);
+    vertices.insert(&f);
 
     vertices.printTree();
 
-    if(vertices.contains(e)) cout << "\n\nFound it\n\n";
-    vertex ep = vertices.find(e);
+    if(vertices.contains(&e)) cout << "\n\nFound it\n\n";
+    vertex* ep = vertices.find(&e);
 
-    int s = ep.adj.size();
-    edge edg = ep.adj.at(1);
-    for(unsigned int i = 0; i < ep.adj.size(); i++)
-        cout << ep.adj.at(i);
+    ep->adj.insert(edge(&b,8.9));
 
+    int s = ep->adj.size();
+    edge edg = e.adj.at(1);
+    for(unsigned int i = 0; i < e.adj.size(); i++)
+        cout << e.adj.at(i);
 
+*/
   cv::Mat kort =
 	  imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
 
