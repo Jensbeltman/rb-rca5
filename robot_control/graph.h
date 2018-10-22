@@ -2,11 +2,17 @@
 #define GRAPH_H
 
 #include <iostream>
-
 #include <opencv2/opencv.hpp>
+//#include "cv_operators.h"
 
-#include "AvlTree.h"
 
+#include "indxavltree.h"
+
+
+
+using namespace cv;
+
+/*
 struct edge;
 
 struct vertex {
@@ -67,7 +73,7 @@ struct edge {
         return os;
     }
 };
-
+*/
 
 class Graph
 {
@@ -80,7 +86,7 @@ public:
     void connect(cv::Point v, cv::Point u, double weight);
 
 private:
-    AvlTree<vertex*> vertices;
+    IndxAvlTree<Point, IndxAvlTree<Point, float>> vertices;
 };
 
 #endif // GRAPH_H

@@ -10,6 +10,7 @@
 
 #include "mp.h"
 
+#include "cv_operators.cpp"
 #include "AvlTree.h"
 #include "indxavltree.h"
 
@@ -19,7 +20,7 @@
 
 using namespace std;
 using namespace cv;
-
+/*
 bool operator==(const cv::Point& l, const cv::Point& r)
 {
     return (l.x == r.x && l.x == r.y);
@@ -38,26 +39,38 @@ bool operator>(const Point& l, const Point& r)
         return (l.y > r.y);
     return (l.x > r.x);
 }
-
+*/
 int main(int _argc, char **_argv) {
 
+    IndxAvlTree<Point, float> adjp;
 
     IndxAvlTree<int, float> adj;
 
-    adj.insert(1,4.9);
-    adj.insert(2,3.4);
-    adj.insert(3,5.7);
-    adj.insert(4,1.5);
-    adj.insert(5,3.4);
-    adj.insert(6,3.9);
-    adj.insert(7,5.4);
-    adj.insert(8,1.7);
-    adj.insert(9,3.5);
-    adj.insert(10,4.4);
+//    adj.insert(1,4.9);
+//    adj.insert(2,3.4);
+//    adj.insert(3,5.7);
+//    adj.insert(4,1.5);
+//    adj.insert(5,3.4);
+//    adj.insert(6,3.9);
+//    adj.insert(7,5.4);
+//    adj.insert(8,1.7);
+//    adj.insert(9,3.5);
+//    adj.insert(10,4.4);
 
-    adj.printTree();
+    adjp.insert(Point(4,9),4.9);
+    adjp.insert(Point(3,4),3.4);
+    adjp.insert(Point(5,7),5.7);
+    adjp.insert(Point(1,5),1.5);
+    adjp.insert(Point(3,4),3.4);
+    adjp.insert(Point(3,9),3.9);
+    adjp.insert(Point(5,4),5.4);
+    adjp.insert(Point(1,7),1.7);
+    adjp.insert(Point(3,5),3.5);
+    adjp.insert(Point(4,4),4.4);
 
-    cout << adj.at(5)->data << endl;
+    adjp.printTree();
+
+    cout << adjp.find(Point(4,4))->data << endl;
 
 
     /*AvlTree<edge> tree;

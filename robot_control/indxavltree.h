@@ -38,7 +38,7 @@ public:
     const Ti& findMin() const;
     const Ti& findMax() const;
     bool contains(const Ti& index) const;
-    IndxAvlNode<Ti, Td> find(const Ti& index) const;
+    IndxAvlNode<Ti, Td>* find(const Ti& index) const;
     bool isEmpty() const;
     void printTree() const;
     void makeEmpty();
@@ -65,7 +65,7 @@ private:
     IndxAvlNode<Ti, Td>* findMin(IndxAvlNode<Ti,Td> *t) const;
     IndxAvlNode<Ti, Td>* findMax(IndxAvlNode<Ti, Td> *t) const;
     bool contains(const Ti& index, IndxAvlNode<Ti, Td> *t) const;
-    IndxAvlNode<Ti, Td> find(const Ti& index, IndxAvlNode<Ti, Td> *t) const;
+    IndxAvlNode<Ti, Td>* find(const Ti& index, IndxAvlNode<Ti, Td> *t) const;
     void makeEmpty(IndxAvlNode<Ti, Td> * & t);
     void printTree(IndxAvlNode<Ti, Td> *t) const;
     IndxAvlNode<Ti, Td>* clone(IndxAvlNode<Ti, Td> *t) const;

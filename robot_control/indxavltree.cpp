@@ -49,7 +49,7 @@ bool IndxAvlTree<Ti,  Td>::contains(const Ti& x) const
 }
 
 template<typename Ti, typename Td>
-IndxAvlNode<Ti, Td> IndxAvlTree<Ti,  Td>::find(const Ti &x) const
+IndxAvlNode<Ti, Td>* IndxAvlTree<Ti,  Td>::find(const Ti &x) const
 {
     return find(x, root);
 }
@@ -211,10 +211,10 @@ bool IndxAvlTree<Ti,  Td>::contains(const Ti& x, IndxAvlNode<Ti,  Td> *t) const
 }
 
 template<typename Ti, typename Td>
-IndxAvlNode<Ti, Td> IndxAvlTree<Ti,  Td>::find(const Ti &x, IndxAvlNode<Ti,  Td> *t) const
+IndxAvlNode<Ti, Td> * IndxAvlTree<Ti,  Td>::find(const Ti &x, IndxAvlNode<Ti,  Td> *t) const
 {
     if (t == nullptr)
-        return x;
+        return t;
     else if (x < t->index)
         return find(x, t->left);
     else if (t->index < x)
