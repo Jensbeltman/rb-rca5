@@ -113,7 +113,7 @@ fuzzy2::fuzzy2()
 void fuzzy2::process()
 {
     p_engine->process();
-    std::cout << "Process 2" << std::endl;
+    //std::cout << "Process 2" << std::endl;
 }
 
 controlOutput2 fuzzy2::getOutput()

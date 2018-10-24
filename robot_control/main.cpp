@@ -9,8 +9,9 @@
 
 using namespace cv;
 
-#include "fuzzy1.h"
-#include "fuzzy2.h"
+//#include "fuzzy1.h"
+//#include "fuzzy2.h"
+#include "fuzzy_control.h"
 #include "circledetect.h"
 
 static boost::mutex mutex;
@@ -36,6 +37,8 @@ void trackRobot(ConstPosesStampedPtr &msg) {
         }
     }
     doubleMap.at<Vec3b>(init_y + y , init_x + x) = {0, 0, 150};
+
+    cv::namedWindow("MapTracking", cv::WINDOW_FREERATIO);
 
     mutex.lock();
     imshow("MapTracking", doubleMap);
@@ -74,6 +77,8 @@ void cameraCallback(ConstImageStampedPtr &msg) {
   std::size_t height = msg->image().height();
   const char *data = msg->image().data().c_str();
   cv::Mat im(int(height), int(width), CV_8UC3, const_cast<char *>(data));
+
+  //std::cout << "Width: " << width << " Height: " << height << std::endl;
 
   im = im.clone();
   cv::cvtColor(im, im, COLOR_BGR2RGB);
@@ -247,8 +252,13 @@ int main(int _argc, char **_argv) {
 
 
   //Initialise the controller
-  fuzzy1 controller;
-  fuzzy2 controller2;
+  //fuzzy1 controller;
+  //fuzzy2 controller2;
+
+  obstacle_avoidance controller;
+  controller.init_controller();
+  take_marble controller2;
+  controller2.init_controller();
 
   // Loop
   while (true) {
@@ -264,14 +274,16 @@ int main(int _argc, char **_argv) {
 
 
     //Determine if a marble is present.
-    if (marbleDist) {
+    else if (marbleDist) {
         controller2.setValues(smallest_dist, smallest_dir, marbleDist);
 
         controller2.process();
 
-        speed = controller2.getOutput().speed;
+        speed = controller2.getValues().speed;
 
-        dir = controller2.getOutput().direction;
+        dir = controller2.getValues().direction;
+
+        std::cout << "Marble" << std::endl;
     } else if (allBlue) {
         speed = speed;
         dir = 0;
@@ -284,10 +296,12 @@ int main(int _argc, char **_argv) {
         controller.process();
 
         //Speed = get value from speed
-        speed = controller.getOutput().speed;
+        speed = controller.getValues().speed;
 
         //Steer direction = get value from Sdir
-        dir = controller.getOutput().direction;
+        dir = controller.getValues().direction;
+
+        std::cout << "No marble" << std::endl;
     }
 
 

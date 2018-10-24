@@ -99,7 +99,7 @@ fuzzy1::fuzzy1()
 void fuzzy1::process()
 {
     p_engine->process();
-    std::cout << "Process 1" << std::endl;
+    //std::cout << "Process 1" << std::endl;
 }
 
 controlOutput fuzzy1::getOutput()

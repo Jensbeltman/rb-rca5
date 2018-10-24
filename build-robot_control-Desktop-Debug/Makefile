@@ -54,12 +54,14 @@ SOURCES       = ../robot_control/main.cpp \
 		../robot_control/fuzzy1.cpp \
 		../robot_control/buffer.cpp \
 		../robot_control/circledetect.cpp \
-		../robot_control/fuzzy2.cpp 
+		../robot_control/fuzzy2.cpp \
+		../robot_control/fuzzy_control.cpp 
 OBJECTS       = main.o \
 		fuzzy1.o \
 		buffer.o \
 		circledetect.o \
-		fuzzy2.o
+		fuzzy2.o \
+		fuzzy_control.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -132,11 +134,13 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../robot_control/robot_control.pro fuzzy1.h \
 		buffer.h \
 		circledetect.h \
-		fuzzy2.h ../robot_control/main.cpp \
+		fuzzy2.h \
+		fuzzy_control.h ../robot_control/main.cpp \
 		../robot_control/fuzzy1.cpp \
 		../robot_control/buffer.cpp \
 		../robot_control/circledetect.cpp \
-		../robot_control/fuzzy2.cpp
+		../robot_control/fuzzy2.cpp \
+		../robot_control/fuzzy_control.cpp
 QMAKE_TARGET  = robot_control
 DESTDIR       = 
 TARGET        = robot_control
@@ -442,6 +446,7 @@ main.o: ../robot_control/main.cpp ../robot_control/fuzzy1.h \
 		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/InputVariable.h \
 		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/Variable.h \
 		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/OutputVariable.h \
+		../robot_control/fuzzy2.h \
 		../robot_control/circledetect.h \
 		../robot_control/buffer.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../robot_control/main.cpp
@@ -676,6 +681,9 @@ fuzzy2.o: ../robot_control/fuzzy2.cpp ../robot_control/fuzzy2.h \
 		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/Variable.h \
 		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/OutputVariable.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o fuzzy2.o ../robot_control/fuzzy2.cpp
+
+fuzzy_control.o: ../robot_control/fuzzy_control.cpp ../robot_control/fuzzy_control.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o fuzzy_control.o ../robot_control/fuzzy_control.cpp
 
 ####### Install
 

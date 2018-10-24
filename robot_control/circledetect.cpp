@@ -18,8 +18,24 @@ int circleDetect::search(cv::Mat & in_img)
     cv::cvtColor(grey_img, grey_img, CV_RGB2GRAY);
 
     cv::GaussianBlur(grey_img, grey_img, cv::Size(9, 9), 2, 2);
+
+
+    //cv::Mat hlsImg = in_img.clone();
+    //cv::cvtColor(in_img, hlsImg, CV_RGB2HLS);
+
+    //cv::Mat hlsCh[3];
+    //cv::split(hlsImg, hlsCh);
+
+    //cv::Mat binImg;
+
+    //cv::threshold(hlsCh[2], binImg, 120, 255, cv::THRESH_BINARY);
+
+    //cv::GaussianBlur(binImg, binImg, cv::Size(9, 9), 2, 2);
+
+
+
     std::vector<cv::Vec3f> circles;
-    cv::HoughCircles(grey_img, circles, cv::HOUGH_GRADIENT, 1, grey_img.rows/8, 50, 25, 0, 0);
+    cv::HoughCircles(grey_img, circles, cv::HOUGH_GRADIENT, 1, in_img.rows/8, 50, 25, 0, 0);
 
     for (size_t i = 0; i < circles.size(); i++) {
         cv::Point center(cvRound(circles[i][0]), cvRound(circles[i][1]));
@@ -59,10 +75,25 @@ int circleDetect::getAmountBlue(cv::Mat img)
     //Make a histogram to determine the amount of blue in the picture.
     cv::Mat hlsImg = img.clone();
     cv::cvtColor(img, hlsImg, CV_RGB2HLS);
+
+
+    //Splitting the hls to see the individual channels.
+    cv::Mat hlsCh[3];
+    cv::split(hlsImg, hlsCh);
+
+    cv::Mat binImg;
+
+    cv::threshold(hlsCh[2], binImg, 120, 255, cv::THRESH_BINARY);
+
+    cv::GaussianBlur(binImg, binImg, cv::Size(9, 9), 2, 2);
+
+    //cv::imshow("", binImg);
+
     int histogram[256] = {0};
     for (int i = 0; i < hlsImg.rows; i++) {
         for (int j = 0; j < hlsImg.cols; j++) {
             histogram[hlsImg.at<cv::Vec3b>(i, j)[1]] += 1;//2 shows the presence of colour very well. 1 looks more cool.
+            //histogram[binImg.at<cv::Vec3b>(i, j)[0]] += 1;
         }
     }
     cv::Mat hist = cv::Mat::zeros(1000, 500, 0);
