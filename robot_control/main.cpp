@@ -5,9 +5,10 @@
 #include <opencv2/opencv.hpp>
 
 #include <iostream>
+using namespace std;
 using namespace cv;
 
-static boost::mutex mutex;
+static boost::mutex mutex2;
 
 void statCallback(ConstWorldStatisticsPtr &_msg) {
   (void)_msg;
@@ -20,19 +21,116 @@ void poseCallback(ConstPosesStampedPtr &_msg) {
   // Dump the message contents to stdout.
   //  std::cout << _msg->DebugString();
 
-  for (int i = 0; i < _msg->pose_size(); i++) {
-    if (_msg->pose(i).name() == "pioneer2dx") {
+  //  for (int i = 0; i < _msg->pose_size(); i++) {
+  //    if (_msg->pose(i).name() == "pioneer2dx") {
 
-      std::cout << std::setprecision(2) << std::fixed << std::setw(6)
-                << _msg->pose(i).position().x() << std::setw(6)
-                << _msg->pose(i).position().y() << std::setw(6)
-                << _msg->pose(i).position().z() << std::setw(6)
-                << _msg->pose(i).orientation().w() << std::setw(6)
-                << _msg->pose(i).orientation().x() << std::setw(6)
-                << _msg->pose(i).orientation().y() << std::setw(6)
-                << _msg->pose(i).orientation().z() << std::endl;
-    }
+  //      std::cout << std::setprecision(2) << std::fixed << std::setw(6)
+  //                << _msg->pose(i).position().x() << std::setw(6)
+  //                << _msg->pose(i).position().y() << std::setw(6)
+  //                << _msg->pose(i).position().z() << std::setw(6)
+  //                << _msg->pose(i).orientation().w() << std::setw(6)
+  //                << _msg->pose(i).orientation().x() << std::setw(6)
+  //                << _msg->pose(i).orientation().y() << std::setw(6)
+  //                << _msg->pose(i).orientation().z() << std::endl;
+  //    }
+  //  }
+}
+double prev_pitch_l, prev_pitch_r, prev_time;
+double delta_pitch_l, delta_pitch_r, delta_time;
+double px = 0;
+double py = 0;
+double phi = 0;
+
+void poseCallbackLocal(ConstPosesStampedPtr &_msg) {
+  // Dump the message contents to stdout.
+  //  std::cout << _msg->DebugString();
+
+  double time = _msg->time().sec() + 0.000000001 * _msg->time().nsec();
+  double pitch_l, pitch_r;
+
+  double vel_l, vel_r;
+
+  for (int i = 0; i < _msg->pose_size(); i++) {
+	if (_msg->pose(i).name() == "pioneer2dx::pioneer2dx::right_wheel") {
+	  double y = _msg->pose(i).orientation().y();
+	  double w = _msg->pose(i).orientation().w();
+
+	  // pitch (y-axis rotation)
+	  pitch_r = M_PI - atan2(_msg->pose(i).orientation().w(),
+							 _msg->pose(i).orientation().y());
+	}
+	if (_msg->pose(i).name() == "pioneer2dx::pioneer2dx::left_wheel") {
+	  double y = _msg->pose(i).orientation().y();
+	  double w = _msg->pose(i).orientation().w();
+
+	  // pitch (y-axis rotation)
+	  pitch_l = M_PI - atan2(_msg->pose(i).orientation().w(),
+							 _msg->pose(i).orientation().y());
+	}
   }
+
+  delta_pitch_l = pitch_l - prev_pitch_l;
+  delta_pitch_r = pitch_r - prev_pitch_r;
+  delta_time = time - prev_time;
+
+  if (delta_pitch_l > 1.8 * M_PI) {
+	delta_pitch_l -= M_PI;
+  }
+  if (delta_pitch_r > 1.8 * M_PI) {
+	delta_pitch_r -= 2 * M_PI;
+  }
+
+  if (delta_pitch_l < -1.8 * M_PI) {
+	delta_pitch_l += 2 * M_PI;
+  }
+  if (delta_pitch_r < -1.8 * M_PI) {
+	delta_pitch_r += 2 * M_PI;
+  }
+
+  vel_l = delta_pitch_l / delta_time;
+  vel_r = delta_pitch_r / delta_time;
+
+  //  cout << fixed << setprecision(6) << "pl: " << setw(4) << pitch_l
+  //	   << " | pr: " << setw(4) << pitch_r << " ||   vl: " << setw(4) <<
+  // vel_l
+  //	   << " ||   vr: " << setw(4) << vel_r << endl;
+
+  prev_pitch_l = pitch_l;
+  prev_pitch_r = pitch_r;
+  prev_time = time;
+
+  const double l = 0.34 + 0.05;
+  double R, omega;
+
+  double dpx = 0;
+  double dpy = 0;
+  double dphi = 0;
+  double ICC_x, ICC_y;
+
+  double vl = vel_l * (0.11 * 2);
+  double vr = vel_r * (0.11 * 2);
+
+  R = (l / 2) * (vl + vr) / (vr - vl);
+  omega = (vr - vl) / l;
+
+  dphi = omega * delta_time + phi;
+
+  ICC_x = px - R * sin(phi);
+  ICC_y = py - R * cos(phi);
+
+  dpx = (cos(omega * delta_time) * (px - ICC_x) -
+		 sin(omega * delta_time) * (py - ICC_y)) +
+		ICC_x;
+  dpy = (sin(omega * delta_time) * (px - ICC_x) +
+		 cos(omega * delta_time) * (py - ICC_y)) +
+		ICC_y;
+
+  px = dpx;
+  py = dpy;
+  phi = dphi;
+
+  cout << fixed << "X: " << setw(5) << px << ", Y: " << setw(5) << py
+	   << ", phi: " << setw(5) << dphi << endl;
 }
 
 void cameraCallback(ConstImageStampedPtr &msg) {
@@ -45,9 +143,9 @@ void cameraCallback(ConstImageStampedPtr &msg) {
   im = im.clone();
   cv::cvtColor(im, im, COLOR_BGR2RGB);
 
-  mutex.lock();
+  mutex2.lock();
   cv::imshow("camera", im);
-  mutex.unlock();
+  mutex2.unlock();
 }
 
 void lidarCallback(ConstLaserScanStampedPtr &msg) {
@@ -92,9 +190,9 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
               cv::Point(10, 20), cv::FONT_HERSHEY_PLAIN, 1.0,
               cv::Scalar(255, 0, 0));
 
-  mutex.lock();
+  mutex2.lock();
   cv::imshow("lidar", im);
-  mutex.unlock();
+  mutex2.unlock();
 }
 
 int main(int _argc, char **_argv) {
@@ -111,6 +209,9 @@ int main(int _argc, char **_argv) {
 
   gazebo::transport::SubscriberPtr poseSubscriber =
       node->Subscribe("~/pose/info", poseCallback);
+
+  gazebo::transport::SubscriberPtr poseSubscriberLocal =
+	  node->Subscribe("~/pose/local/info", poseCallbackLocal);
 
   gazebo::transport::SubscriberPtr cameraSubscriber =
       node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
@@ -143,9 +244,9 @@ int main(int _argc, char **_argv) {
   while (true) {
     gazebo::common::Time::MSleep(10);
 
-    mutex.lock();
+	mutex2.lock();
     int key = cv::waitKey(1);
-    mutex.unlock();
+	mutex2.unlock();
 
     if (key == key_esc)
       break;
