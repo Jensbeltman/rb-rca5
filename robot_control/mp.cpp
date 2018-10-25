@@ -1,4 +1,5 @@
 #include "mp.h"
+#include "graph.h"
 
 mp::mp() {}
 
@@ -256,10 +257,8 @@ void mp::brushfire(){
         color-=5;
         cps = t_cps;
         t_cps.clear();
-        //cout << endl;
-        //cout << "display brushfire";
-        imshow("map", display);
-        waitKey(20);
+//        imshow("map", display);
+//        waitKey(20);
     }
 
     // brush fire done
@@ -267,7 +266,7 @@ void mp::brushfire(){
     sort( peaks.begin(), peaks.end() , &sort_point );
     peaks.erase( unique( peaks.begin(), peaks.end() ), peaks.end() );
 
-    for(int i = 0; i < peaks.size(); i++){
+    for(unsigned int i = 0; i < peaks.size(); i++){
       //  display.at<Vec3b>(peaks[i]) = Vec3b(255,255,255);
     }
 
@@ -292,43 +291,49 @@ void mp::brushfire(){
         if(cp != sp){
             lines.push_back(vector<Point>());
             lines[lines.size() - 1].push_back(sp);
-            lines[lines.size() - 1].push_back(cp/*-Point(1,1)*/);
+            lines[lines.size() - 1].push_back(cp-Point(1,1));
         };
     }
 
-    int test = 0;
+    //delete small line segments
     auto ittr = lines.begin();
     while( ittr != lines.end()){
-        test++;
         ittr++;
         Point a = (*ittr).at(0);
         Point b = (*ittr).at(1);
         double n = norm(a-b);
+
         if(n < 4){
             ittr = lines.erase(ittr);
         }
 
-
         if(ittr == lines.end()) cout << "\n\n DONE! \n\n";
     }
 
-    // draw line segments
-    for(int i = 0; i < lines.size(); i++){
+    // draw line segments and add graph vertices
+
+    Graph graph;
+
+    for(unsigned int i = 0; i < lines.size(); i++){
         //line(display,lines[i][0],lines[i][1],Scalar(rand() % 235 + 20, rand() % 235 + 20, rand() % 235 + 20),2);
-        line(display,lines[i][0],lines[i][1],Scalar(255,255,255),2);
-        imshow("map", display);
-        waitKey(20);
+        graph.add(lines[i][0]);
+        graph.add(lines[i][1]);
+        graph.connect(lines[i][0], lines[i][1], norm(lines[i][0] - lines[i][1]));
+
+        //line(display,lines[i][0],lines[i][1],Scalar(255,255,255),2);
+//        imshow("map", display);
+//        waitKey(20);
     }
 
-    // some new
-    for(int i = 0; i < lines.size(); i++){
+    // connect line ends
+    for(unsigned int i = 0; i < lines.size(); i++){
         float dgmin0 = 70;
         float dgmin1 = 70;
         Point pgi0(0,0);
         Point pgj0(0,0);
         Point pgi1(0,0);
         Point pgj1(0,0);
-        for(int j = 0; j < lines.size(); j++){
+        for(unsigned int j = 0; j < lines.size(); j++){
             if(i == j) continue;
             int d0 = norm(lines[i][0]-lines[j][0]);
             int d1 = norm(lines[i][0]-lines[j][1]);
@@ -386,12 +391,117 @@ void mp::brushfire(){
             }
         }
         if(norm(pgi0-pgj0) < norm(pgi1-pgj0) && pgi0.x != 0) {
-            line(display,pgi0,pgj0,Scalar(255,255,255),2);
+            graph.connect(pgi0, pgj0, norm(pgi0 - pgj0));
+            //line(display,pgi0,pgj0,Scalar(255,255,255),2);
         }
-        if(norm(pgi1-pgj1) < norm(pgi0-pgj1) && pgi1.x != 0) line(display,pgi1,pgj1,Scalar(255,255,255),2);
-        imshow("map", display);
-        waitKey(20);
+        if(norm(pgi1-pgj1) < norm(pgi0-pgj1) && pgi1.x != 0) {
+            graph.connect(pgi1, pgj1, norm(pgi1 - pgj1));
+            //line(display,pgi1,pgj1,Scalar(255,255,255),2);
+        }
+        /*imshow("map", display);
+        waitKey(20);*/
     }
+
+    graph.print(display);
+
+    // from connect corners
+
+
+    resize(bitmap,display,bitmap.size()*4,0,0,INTER_NEAREST);
+    cvtColor(display, display, COLOR_GRAY2BGR);
+
+    int cnrcount = findCorners(display);
+    int maxc = 0;
+
+    vector<vispos> vps;
+
+    vector<array<Point,2>> lins = graph.lines();
+
+    for(int i = 0; i < lins.size(); i++){
+        cout << lins[i][0] << " : " << lins[i][1] << endl;
+        LineIterator lio(display,lins[i][0],lins[i][1]);
+        for(int j = 0; j < lio.count; j++,++lio){
+            int count = 0;
+            vispos cvp;
+            cvp.pos = lio.pos();
+            cout << cvp.pos << endl;
+
+            for(int cnr_i = 0; cnr_i < cnr_t.size(); cnr_i++){
+                LineIterator li(display, cvp.pos, cnr_t[cnr_i].P, 8);
+                if(li.count < 160) {
+                    bool connected = true;
+
+                    for(int j = 0; j < li.count; j++,++li){
+
+                        if(**li == 0){
+                            connected = false;
+                            break;
+                        }
+                    }
+                    if(connected){
+                        cvp.corners.push_back(cnr_i);
+                        count += 16;
+                        cnr_t[cnr_i].seenBy++;
+                    }
+                }
+            }
+            vps.push_back(cvp);
+
+            if(count > 255) count = 255;
+            maxc = max(maxc, count);
+            display.at<Vec3b>(cvp.pos) = Vec3b(255-count,255-count,255);
+            //rectangle(display, Point(4*c,4*r),Point(4*c+3,4*r+3),Scalar(255-count,255-count,255),FILLED);
+        }
+    }
+
+    /*
+
+    while(true){
+
+        resize(bitmap,display,bitmap.size()*4,0,0,INTER_NEAREST);
+
+        for(int i = 0; i < vps.size(); i++){
+            float score = 0;
+            int p = 0;
+            for(int j = 0; j < vps[i].corners.size(); j++){
+                float ts = cnr_t[vps[i].corners[j]].score;
+                if(ts > 0){
+                    score += ts;
+                    p++;
+                }
+            }
+            vps[i].score = score * pow(0.9,p);
+        }
+
+        sort(vps.begin(),vps.end(),[](vispos a, vispos b){
+            return a.score > b.score;
+        });
+        if(vps[0].score == 0){break;}
+        scale = 255 / vps[0].score;
+        for(int i = 0; i < vps.size(); i++){
+            //cout <<  setw(5) << vps[i].score << "  |" << vps[i].pos  <<endl ;
+            int x = vps[i].pos.x;
+            int y = vps[i].pos.y;
+            int color = vps[i].score * scale;
+            rectangle(display, Point(4*x,4*y),Point(4*x+3,4*y+3),Scalar(255,255-color,255-color),FILLED);
+        }
+        spots.push_back(vps[0].pos*4);
+        for(int i = 0; i < spots.size(); i++){
+            circle(display,spots[i],2,Scalar(0,0,255),FILLED);
+        }
+
+        for(int i = 0; i < vps[0].corners.size(); i++){
+            cnr_t[vps[0].corners[i]].score = 0;
+        }
+        cout << endl;
+        cout << "display";
+
+        imshow("map", display);
+        waitKey(0);
+
+    }
+
+*/
 
     cout << "\n\n -- BF DONE -- \n\n";
 
@@ -401,7 +511,7 @@ void mp::findAreas() {
   while (findCorners(bitmap_t)) {
     area_t.clear();
 
-    for (int i = 0; i < cnr_t.size(); i++) {
+    for (unsigned int i = 0; i < cnr_t.size(); i++) {
 
       int dy = 1;
       int dx = 0;
@@ -479,7 +589,7 @@ bool mp::isBlackBetween(Mat m, Point a, Point d, int l) {
 void mp::displayMap() { imshow("map", display); }
 
 void mp::drawRect() {
-  for (int i = 0; i < area.size(); i++) {
+  for (unsigned int i = 0; i < area.size(); i++) {
     rectangle(display, area[i],
               Scalar(rand() % 235 + 20, rand() % 235 + 20, rand() % 235 + 20),
               FILLED, LINE_8);
@@ -490,16 +600,15 @@ void mp::drawRect() {
 
 void mp::findConnections(){
 
-    for(int i = 0; i < area.size() -1; i++){
+    for(unsigned int i = 0; i < area.size() -1; i++){
         Rect a = area[i];
-        for(int j = i + 1; j < area.size(); j++){
+        for(unsigned int j = i + 1; j < area.size(); j++){
             Rect b = area[j];
-            if(     a.x + a.width  == b.x && a.y + a.height > b.y && b.y + b.height > a.y ||
-                    b.x + b.width  == a.x && a.y + a.height > b.y && b.y + b.height > a.y ||
-                    a.y + a.height == b.y && a.x + a.width  > b.x && b.x + b.width  > a.x ||
-                    b.y + b.height == a.y && a.x + a.width  > b.x && b.x + b.width  > a.x
-                    ){
-
+            if(     (a.x + a.width  == b.x && a.y + a.height > b.y && b.y + b.height > a.y) ||
+                    (b.x + b.width  == a.x && a.y + a.height > b.y && b.y + b.height > a.y) ||
+                    (a.y + a.height == b.y && a.x + a.width  > b.x && b.x + b.width  > a.x) ||
+                    (b.y + b.height == a.y && a.x + a.width  > b.x && b.x + b.width  > a.x)
+            ){
                 line(display,Point(a.x + a.width/2, a.y + a.height/2),Point(b.x + b.width/2, b.y + b.height/2),Scalar(255,0,0),1,LINE_AA);
             }
         }

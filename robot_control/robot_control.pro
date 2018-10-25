@@ -8,8 +8,7 @@ SOURCES += main.cpp \
     AvlTree.cpp \
     graph.cpp \
     Bezier.cpp \
-    indxavltree.cpp \
-    cv_operators.cpp
+    indxavltree.cpp
 
 CONFIG += link_pkgconfig
 PKGCONFIG += gazebo
@@ -20,4 +19,5 @@ HEADERS += \
     AvlTree.h \
     graph.h \
     Bezier.h \
-    indxavltree.h
+    indxavltree.h \
+    cv_operators.h

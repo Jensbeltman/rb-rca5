@@ -72,8 +72,8 @@ void IndxAvlTree<Ti,  Td>::makeEmpty()
     _size = 0;
     makeEmpty(root);
 }
-template <typename Ti, typename Td>
 
+template <typename Ti, typename Td>
 void IndxAvlTree<Ti,  Td>::insert(const Ti& x, const Td& d)
 {
     insert(x, d, root);
@@ -110,9 +110,9 @@ void IndxAvlTree<Ti,  Td>::insert(const Ti& x, const Td& d, IndxAvlNode<Ti,  Td>
         _size+=1;
         t = new IndxAvlNode<Ti,  Td>{ x, d, nullptr, nullptr };
     }else if (x < t->index)
-        insert(x, t->left);
+        insert(x, d, t->left);
     else if (t->index < x)
-        insert(x, t->right);
+        insert(x, d, t->right);
 
     balance(t);
 }
@@ -225,6 +225,7 @@ IndxAvlNode<Ti, Td> * IndxAvlTree<Ti,  Td>::find(const Ti &x, IndxAvlNode<Ti,  T
 
 template <typename Ti, typename Td>
 void IndxAvlTree<Ti,  Td>::makeEmpty(IndxAvlNode<Ti,  Td> * & t)
+
 {
     if (t != nullptr)
     {
@@ -252,7 +253,7 @@ IndxAvlNode<Ti,  Td> * IndxAvlTree<Ti,  Td>::clone(IndxAvlNode<Ti,  Td> *t) cons
     if (t == nullptr)
         return nullptr;
     else
-        return new IndxAvlNode<Ti,  Td>{ t->index, clone(t->left), clone(t->right), t->height };
+        return new IndxAvlNode<Ti,  Td>{ t->index, t->data,clone(t->left), clone(t->right), t->height };
 }
 
 template <typename Ti, typename Td>
@@ -308,13 +309,13 @@ IndxAvlNode<Ti,  Td>* IndxAvlTree<Ti,  Td>::at(int* i, IndxAvlNode<Ti,  Td> *t)
 {
     if (t == nullptr || *i < 0) return nullptr;
 
-    if(*i == 0) {
-        return t;
-    }
-    *i = *i - 1;
     IndxAvlNode<Ti,  Td>* ret;
     ret = at(i,t->left);
     if(ret != nullptr) return ret;
+
+    if(*i == 0) return t;
+    *i = *i - 1;
+
     return at(i,t->right);
 }
 

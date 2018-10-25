@@ -14,8 +14,6 @@ public:
     IndxAvlNode(Ti i,Td d, IndxAvlNode *lt, IndxAvlNode *rt, int h = 0)
         : index{ i }, data{ d }, left{ lt }, right{ rt }, height{ h } { }
 
-    //IndxAvlNode(int && ele, IndxAvlNode *lt, IndxAvlNode *rt, int h = 0)
-    //	: element{ std::move(ele) }, left{ lt }, right{ rt }, height{ h } { }
     ~IndxAvlNode() {}
 
     Ti index;
