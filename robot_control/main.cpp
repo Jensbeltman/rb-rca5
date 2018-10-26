@@ -13,6 +13,7 @@ using namespace cv;
 //#include "fuzzy2.h"
 #include "fuzzy_control.h"
 #include "circledetect.h"
+#include "laserscanner.h"
 
 static boost::mutex mutex;
 
@@ -80,8 +81,8 @@ void cameraCallback(ConstImageStampedPtr &msg) {
 
   //std::cout << "Width: " << width << " Height: " << height << std::endl;
 
-  im = im.clone();
-  cv::cvtColor(im, im, COLOR_BGR2RGB);
+  //im = im.clone();
+  cv::cvtColor(im, im, COLOR_RGB2BGR);
     //cvtColor(im, im, COLOR_BGR2GRAY);
 
   // Marble detection
@@ -114,9 +115,9 @@ void cameraCallback(ConstImageStampedPtr &msg) {
   mutex.unlock();
 }
 
-/*TEST PLACEMENT*/
-float smallest_dist;
-float smallest_dir;
+/*
+//float smallest_dist;
+//float smallest_dir;
 
 void lidarCallback(ConstLaserScanStampedPtr &msg) {
 
@@ -165,48 +166,24 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
   mutex.unlock();
 
 
-  /*****TEST PLACEMENT*****/
-  smallest_dist = msg->scan().ranges(0);
-  smallest_dir = msg->scan().angle_min();
-  float new_angle = smallest_dir;
-  for (int i = 0; i < msg->scan().ranges_size(); i++) {
-      smallest_dist = (smallest_dist < msg->scan().ranges(i)) ? smallest_dist : msg->scan().ranges(i);
-      new_angle = new_angle + msg->scan().angle_step();
-      smallest_dir = (smallest_dist < msg->scan().ranges(i)) ? smallest_dir : new_angle;
-  }
-}
 
-/*
-float getClosestDir(ConstLaserScanStampedPtr &msg) {
-    float smallest_dist = msg->scan().ranges(0);
-    float smallest_dir = msg->scan().angle_min();
-    float new_angle = smallest_dir;
-    for (int i = 0; i < msg->scan().ranges_size(); i++) {
-        smallest_dist = (smallest_dist < msg->scan().ranges(i)) ? smallest_dist : msg->scan().ranges(i);
-        new_angle = new_angle + msg->scan().angle_step();
-        smallest_dir = (smallest_dist < msg->scan().ranges(i)) ? smallest_dir : new_angle;
-    }
-  //  std::cout << "Smallest distance: " << smallest_dist << " Smallest direction: " << smallest_dir << std::endl;
-
-    return smallest_dir;
-}
-
-float getClosestDist(ConstLaserScanStampedPtr & msg) {
-    float smallest_dist = msg->scan().ranges(0);
-    float smallest_dir = msg->scan().angle_min();
-    float new_angle = smallest_dir;
-    for (int i = 0; i < msg->scan().ranges_size(); i++) {
-        smallest_dist = (smallest_dist < msg->scan().ranges(i)) ? smallest_dist : msg->scan().ranges(i);
-        new_angle = new_angle + msg->scan().angle_step();
-        smallest_dir = (smallest_dist < msg->scan().ranges(i)) ? smallest_dir : new_angle;
-    }
-  //  std::cout << "Smallest distance: " << smallest_dist << " Smallest direction: " << smallest_dir << std::endl;
-
-    return smallest_dist;
+  //smallest_dist = msg->scan().ranges(0);
+  //smallest_dir = msg->scan().angle_min();
+  //float new_angle = smallest_dir;
+  //for (int i = 0; i < msg->scan().ranges_size(); i++) {
+  //    smallest_dist = (smallest_dist < msg->scan().ranges(i)) ? smallest_dist : msg->scan().ranges(i);
+  //    new_angle = new_angle + msg->scan().angle_step();
+  //    smallest_dir = (smallest_dist < msg->scan().ranges(i)) ? smallest_dir : new_angle;
+  //}
 }
 */
 
 int main(int _argc, char **_argv) {
+
+    laserscanner scanner;
+    circleDetect circDetect;
+
+
   // Load gazebo
   gazebo::client::setup(_argc, _argv);
 
@@ -215,17 +192,27 @@ int main(int _argc, char **_argv) {
   node->Init();
 
   // Listen to Gazebo topics
-  gazebo::transport::SubscriberPtr statSubscriber =
-      node->Subscribe("~/world_stats", statCallback);
+  //gazebo::transport::SubscriberPtr statSubscriber =
+  //    node->Subscribe("~/world_stats", statCallback);
 
   gazebo::transport::SubscriberPtr poseSubscriber =
       node->Subscribe("~/pose/info", trackRobot);//poseCallback, trackRobot);
 
-  gazebo::transport::SubscriberPtr cameraSubscriber =
-      node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
+  //gazebo::transport::SubscriberPtr cameraSubscriber =
+  //    node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
 
-  gazebo::transport::SubscriberPtr lidarSubscriber =
-      node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", lidarCallback);
+  //gazebo::transport::SubscriberPtr lidarSubscriber =
+  //    node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", lidarCallback);
+
+  gazebo::transport::SubscriberPtr circleDetection =
+          node->Subscribe("~/pioneer2dx/camera/link/camera/image", &circleDetect::detect, &circDetect);
+
+  gazebo::transport::SubscriberPtr laserScanSubscriber =
+          node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &laserscanner::performScan, &scanner);
+
+  gazebo::transport::SubscriberPtr laserScanRansac =
+          node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &laserscanner::findLines, &scanner);
+
 
   // Publish to the robot vel_cmd topic
   gazebo::transport::PublisherPtr movementPublisher =
@@ -275,7 +262,7 @@ int main(int _argc, char **_argv) {
 
     //Determine if a marble is present.
     else if (marbleDist) {
-        controller2.setValues(smallest_dist, smallest_dir, marbleDist);
+        controller2.setValues(scanner.getClosestScan().distance, scanner.getClosestScan().direction, marbleDist);
 
         controller2.process();
 
@@ -283,14 +270,14 @@ int main(int _argc, char **_argv) {
 
         dir = controller2.getValues().direction;
 
-        std::cout << "Marble" << std::endl;
+        //std::cout << "Marble" << std::endl;
     } else if (allBlue) {
         speed = speed;
         dir = 0;
-        std::cout << "No AI" << std::endl;
+        //std::cout << "No AI" << std::endl;
     } else {
         //Set value Odir from getClosestDir and set value Odist from getClosestDist
-        controller.setValues(smallest_dist, smallest_dir);
+        controller.setValues(scanner.getClosestScan().distance, scanner.getClosestScan().direction);
 
         //Engine process here.
         controller.process();
@@ -301,12 +288,8 @@ int main(int _argc, char **_argv) {
         //Steer direction = get value from Sdir
         dir = controller.getValues().direction;
 
-        std::cout << "No marble" << std::endl;
+        //std::cout << "No marble" << std::endl;
     }
-
-
-
-
 
 
 /*

@@ -12,6 +12,53 @@ circleDetect::circleDetect()
     //circBuffer.setLowerB(10);
 }
 
+void circleDetect::detect(ConstImageStampedPtr &msg)
+{
+    std::size_t width = msg->image().width();
+    std::size_t height = msg->image().height();
+    const char *data = msg->image().data().c_str();
+    cv::Mat im(int(height), int(width), CV_8UC3, const_cast<char *>(data));
+    cv::cvtColor(im, im, CV_RGB2BGR);
+
+    cv::cvtColor(im, im, CV_BGR2HLS);
+    cv::Mat hlsChannels[3];
+    cv::split(im, hlsChannels);
+
+    cv::Mat binSat;
+    cv::threshold(hlsChannels[2], binSat, 125, 255, cv::THRESH_BINARY);
+    cv::GaussianBlur(binSat, binSat, cv::Size(9, 9), 2, 2);
+
+    /*
+    cv::Mat edges, dx, dy;
+    int kernelSize = 3;
+    int cannyThreshold = 50;
+    cv::Sobel(binSat, dx, CV_16S, 1, 0, kernelSize, 1, 0, cv::BORDER_REPLICATE);
+    cv::Sobel(binSat, dy, CV_16S, 0, 1, kernelSize, 1, 0, cv::BORDER_REPLICATE);
+    cv::Canny(dx, dy, edges, std::max(1, cannyThreshold / 2), cannyThreshold, false);
+    */
+
+
+    std::vector<cv::Vec3f> circs;
+    cv::HoughCircles(binSat, circs, cv::HOUGH_GRADIENT, 0.8, im.rows/8, 50, 25, 0, 0);
+
+    for (size_t i = 0; i < circs.size(); i++) {
+        cv::Point center(cvRound(circs[i][0]), cvRound(circs[i][1]));
+        int radius = cvRound(circs[i][2]);
+        //Center
+        circle(binSat, center, 3, cv::Scalar(150), -1, 8, 0);
+        //Outline
+        circle(binSat, center, radius, cv::Scalar(150), 3, 8, 0);
+    }
+
+    // Draw center point on image
+    int center_x = im.cols/2;
+    int center_y = im.rows/2;
+    circle(binSat, cv::Point(center_x, center_y), 2, cv::Scalar(150), -1, 8, 0);
+
+
+    cv::imshow("", binSat);
+}
+
 int circleDetect::search(cv::Mat & in_img)
 {
     cv::Mat grey_img = in_img.clone();
@@ -74,12 +121,12 @@ int circleDetect::getAmountBlue(cv::Mat img)
 {
     //Make a histogram to determine the amount of blue in the picture.
     cv::Mat hlsImg = img.clone();
-    cv::cvtColor(img, hlsImg, CV_RGB2HLS);
+    cv::cvtColor(img, hlsImg, CV_BGR2HLS);
 
 
     //Splitting the hls to see the individual channels.
     cv::Mat hlsCh[3];
-    cv::split(hlsImg, hlsCh);
+    cv::split(img, hlsCh);
 
     cv::Mat binImg;
 
@@ -87,7 +134,15 @@ int circleDetect::getAmountBlue(cv::Mat img)
 
     cv::GaussianBlur(binImg, binImg, cv::Size(9, 9), 2, 2);
 
-    //cv::imshow("", binImg);
+    //cv::imshow("", hlsCh[0]);
+    cv::Mat histhalloj;
+    float ranges[] = {0, 256};
+    int histsize[] = {20};
+    int channels[] = {0};
+    const float *p_ranges[] = {ranges};
+    cv::calcHist(&hlsImg, 1, channels, cv::Mat(), histhalloj, 1, histsize, p_ranges, true);
+    cv::imshow("", hlsCh[0]);
+    std::cout << "Hej " << histhalloj << std::endl;
 
     int histogram[256] = {0};
     for (int i = 0; i < hlsImg.rows; i++) {
@@ -108,6 +163,6 @@ int circleDetect::getAmountBlue(cv::Mat img)
         avg_blue += histogram[i];
     }
     //std::cout << avg_blue/10 << std::endl;
-    cv::imshow("", flip);
+    //cv::imshow("", flip);
     return avg_blue/10;
 }
