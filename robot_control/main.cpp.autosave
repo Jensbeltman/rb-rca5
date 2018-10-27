@@ -43,7 +43,7 @@ double phi = 0;
 bool first = false;
 double rw = 0, lw = 0;
 
-void poseCallbackLocal(ConstPosesStampedPtr &_msg) {
+void localPoseCallback(ConstPosesStampedPtr &_msg) {
   // Dump the message contents to stdout.
   //  std::cout << _msg->DebugString();
 
@@ -242,7 +242,7 @@ int main(int _argc, char **_argv) {
       node->Subscribe("~/pose/info", poseCallback);
 
   gazebo::transport::SubscriberPtr poseSubscriberLocal =
-	  node->Subscribe("~/pose/local/info", poseCallbackLocal);
+	  node->Subscribe("~/pose/local/info", localPoseCallback);
 
   gazebo::transport::SubscriberPtr cameraSubscriber =
       node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
