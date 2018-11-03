@@ -103,8 +103,8 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
             tphi = 0;
             mx = x * G2P + bitmap.cols / 2;
             my = -y * G2P + bitmap.rows / 2;
-            montecarlo.reDistribute(Point2f(mx*4,my*4),phi); // enten eller :
-            //montecarlo.setConf(Point2f(4 * mx, 4 * my), (float)phi, true);
+            //montecarlo.reDistribute(Point2f(mx*4,my*4),phi); // enten eller :
+            montecarlo.setConf(Point2f(4 * mx, 4 * my), (float)phi, true);
         }
     }
   }else{

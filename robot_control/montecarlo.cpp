@@ -50,7 +50,7 @@ void Montecarlo::setConf(Point2f p, float d, bool override) {
   dir = d;
   if(override){
       tpos = p;
-      dir = d;
+      tdir = d;
   }
 }
 
