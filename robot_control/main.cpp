@@ -39,10 +39,10 @@ void trackRobot(ConstPosesStampedPtr &msg) {
     }
     doubleMap.at<Vec3b>(init_y + y , init_x + x) = {0, 0, 150};
 
-    cv::namedWindow("MapTracking", cv::WINDOW_FREERATIO);
+    //cv::namedWindow("MapTracking", cv::WINDOW_FREERATIO);
 
     mutex.lock();
-    imshow("MapTracking", doubleMap);
+    //imshow("MapTracking", doubleMap);
     mutex.unlock();
 }
 
@@ -261,7 +261,7 @@ int main(int _argc, char **_argv) {
 
 
     //Determine if a marble is present.
-    else if (marbleDist) {
+    if (marbleDist) {
         controller2.setValues(scanner.getClosestScan().distance, scanner.getClosestScan().direction, marbleDist);
 
         controller2.process();
