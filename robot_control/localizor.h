@@ -36,10 +36,13 @@ class Localizor {
   // position calculations
   double prev_p_l, prev_p_r, prev_t;
   double dp_l, dp_r, dt, t;
-  double x, y, phi, rx, ry, rphi, mx, my;
+  double x, y, phi, rx, ry, rphi, mx, my, tx, ty, tphi;
   double rw, lw;
   double qw, qx, qy, qz, p_l, p_r, v_l, v_r;
   bool first;
+  bool mcActive = false;
+  int nMonte = 0;
+  int nmcA = 0;
 };
 
 #endif  // LOCALIZOR_H

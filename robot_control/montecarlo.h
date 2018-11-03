@@ -19,7 +19,7 @@ class Montecarlo {
 
   void parseScan(ConstLaserScanStampedPtr &msg);
   void reDistribute(Point2f, float);
-  void setConf(Point2f, float);
+  void setConf(Point2f, float, bool = false);
   Point2f getBestPos();
   double getBestDir();
 

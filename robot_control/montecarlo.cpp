@@ -31,27 +31,38 @@ void Montecarlo::parseScan(ConstLaserScanStampedPtr &msg) {
   localize(laserScanner.getScan());
 }
 
-void Montecarlo::reDistribute(Point2f pos, float dir) {
-  // std::default_random_engine gen;
-  std::normal_distribution<double> dist(0.0, .01);
-  tpos = pos;
-  tdir = dir;
+void Montecarlo::reDistribute(Point2f p, float d) {
+  std::normal_distribution<double> dist(0.0, .15);
+  pos = p;
+  dir = d;
+  tpos = p;
+  tdir = d;
 
   for (int i = 0; i < nEst; i++) {
-	rConf[i].dir = tdir;      // + 0.005 * dist(generator);
-	rConf[i].pos.x = tpos.x;  // + dist(generator);
-	rConf[i].pos.y = tpos.y;  // + dist(generator);
+    rConf[i].dir = tdir  + 0.01 * dist(generator);
+    rConf[i].pos.x = tpos.x + dist(generator);
+    rConf[i].pos.y = tpos.y + dist(generator);
   }
 }
 
-void Montecarlo::setConf(Point2f p, float d) {
+void Montecarlo::setConf(Point2f p, float d, bool override) {
   pos = p;
   dir = d;
+  if(override){
+      tpos = p;
+      dir = d;
+  }
 }
 
 Point2f Montecarlo::getBestPos() {
-  return Point2f((rConf[0].pos.x - map.cols / 2) / 4,
-				 -(rConf[0].pos.y - map.rows / 2) / 4);
+  Point2f tp(0,0);
+  int n = nEst/4;
+  for(int i = 0; i < n; i++){
+      tp += rConf[0].pos;
+  }
+  tp /= (float) n;
+  return Point2f((tp.x - map.cols / 2) / 4,
+                 -(tp.y - map.rows / 2) / 4);
 }
 
 double Montecarlo::getBestDir() { return rConf[0].dir; }
