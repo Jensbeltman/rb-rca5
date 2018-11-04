@@ -20,7 +20,7 @@ void circleDetect::detect(ConstImageStampedPtr &msg)
     cv::Mat im(int(height), int(width), CV_8UC3, const_cast<char *>(data));
     cv::cvtColor(im, im, CV_RGB2BGR);
 
-    cv::cvtColor(im, im, CV_BGR2HLS);
+    //cv::cvtColor(im, im, CV_BGR2HLS);
     cv::Mat hlsChannels[3];
     cv::split(im, hlsChannels);
 
@@ -56,7 +56,7 @@ void circleDetect::detect(ConstImageStampedPtr &msg)
     circle(binSat, cv::Point(center_x, center_y), 2, cv::Scalar(150), -1, 8, 0);
 
 
-    cv::imshow("", binSat);
+    cv::imshow("", im);
 }
 
 int circleDetect::search(cv::Mat & in_img)

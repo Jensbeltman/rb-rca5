@@ -47,8 +47,8 @@ void testDraw(ConstLaserScanStampedPtr &msg,
     float range_min = float(msg->scan().range_min());
     float range_max = float(msg->scan().range_max());
 
-    int sec = msg->time().sec();
-    int nsec = msg->time().nsec();
+    //int sec = msg->time().sec();
+    //int nsec = msg->time().nsec();
 
     int nranges = msg->scan().ranges_size();
     int nintensities = msg->scan().intensities_size();
@@ -86,11 +86,12 @@ void testDraw(ConstLaserScanStampedPtr &msg,
         cv::line(im, cv::Point(200+startpoints[i].first*px_per_m, 200-startpoints[i].second*px_per_m),
                  cv::Point(200+endpoints[i].first*px_per_m, 200-endpoints[i].second*px_per_m), cv::Scalar(rand()%200, rand()%200, rand()%200), 2, cv::LINE_8);
     }
-    //for (int i = 0; i < (int)closestP.size(); i++) {
-    //    //Draw lines to shortest distances.
-    //    cv::line(im, cv::Point(200+0*px_per_m, 200-0*px_per_m),
-    //             cv::Point(200+closestP[i].first*px_per_m, 200-closestP[i].second*px_per_m), cv::Scalar(rand()%200, rand()%200, rand()%200), 2, cv::LINE_8);
-    //}
+
+    for (int i = 0; i < (int)closestP.size(); i++) {
+        //Draw lines to shortest distances.
+        cv::line(im, cv::Point(200+0*px_per_m, 200-0*px_per_m),
+                 cv::Point(200+closestP[i].first*px_per_m, 200-closestP[i].second*px_per_m), cv::Scalar(0, 0, 150), 2, cv::LINE_8);
+    }
     //cv::line(im, cv::Point(200+0*px_per_m, 200-0*px_per_m),
     //         cv::Point(200+1*px_per_m, 200-0*px_per_m), cv::Scalar(rand()%200, rand()%200, rand()%200), 2, cv::LINE_8);
 
@@ -101,44 +102,40 @@ void testDraw(ConstLaserScanStampedPtr &msg,
 
 void laserscanner::findLines(ConstLaserScanStampedPtr &msg)
 {
-    std::vector<std::pair<float, float>> startPoints;
-    std::vector<std::pair<float, float>> endPoints;
-    //std::vector<std::pair<float, float>> oToStart;
-    //std::vector<std::pair<float, float>> oToEnd;
-    std::vector<std::pair<float, float>> closestPoints;
+    startPoints.clear();
+    endPoints.clear();
+    closestPoints.clear();
+    cartCoordinates.clear();
+    regressionStart.clear();
+    regressionEnd.clear();
+    ransacLines.clear();
 
+    float threshold = 0.005f;
+    int lineThresh = 8;
+    float distance = 0;
+    int point1;
+    int point2;
 
-    std::vector<std::pair<float, float>> cartCoordinates;
-    //std::vector<int> scanNumber;
     int amountScans = msg->scan().ranges_size();
     float angle = msg->scan().angle_min();
     float angleInc = msg->scan().angle_step();
+
     for (int i = 0; i < amountScans; i++) {
         if (! isinf(msg->scan().ranges(i))) {
             float range = msg->scan().ranges(i);
             cartCoordinates.push_back(std::make_pair(range * std::cos(angle), range * std::sin(angle)));
-            //scanNumber.push_back(i);
-        }// else
-        //    cartCoordinates.push_back(std::make_pair(EMPTY, EMPTY));
+        }
         angle += angleInc;
     }
-    //while (cartCoordinates.front().first == EMPTY)
-    //    cartCoordinates.erase(cartCoordinates.begin());
-    //while (cartCoordinates.back().first == EMPTY)
-    //    cartCoordinates.erase(cartCoordinates.end());
 
     int npoints = cartCoordinates.size();
-    std::cout << "npoints " << npoints << std::endl;
-
-    //Delete the previous lines.
-    ransacLines.erase(ransacLines.begin(), ransacLines.end());
-
+    //std::cout << "npoints " << npoints << std::endl;
 
     //Following needs to be done N times. (Number of points?)
     for (int find = 0; find < 200; find++) {
 
-        int point1;
-        int point2;
+        keep.clear();
+        keepIndex.clear();
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -150,28 +147,17 @@ void laserscanner::findLines(ConstLaserScanStampedPtr &msg)
                 break;
         }
 
-        //std::cout << point1 << ", " << point2 << ", " << amountScans-1 << std::endl;
-
         float x1 = cartCoordinates[point1].first;
         float y1 = cartCoordinates[point1].second;
         float x2 = cartCoordinates[point2].first;
         float y2 = cartCoordinates[point2].second;
 
-        float threshold = 0.005f;
-        std::vector<std::pair<float, float>> keep;
-        std::vector<int> keepIndex;
-        float distance = 0;
         int current_coordinates = cartCoordinates.size();
 
-
-        int lineThresh = 8;
-
         for (int i = 0; i < current_coordinates; i++) {
-            if (i != point1 && i != point2) {// && cartCoordinates[i].first != EMPTY) {
+            if (i != point1 && i != point2) {
                 distance = std::abs(((y2 - y1)*cartCoordinates[i].first) - ((x2 - x1)*cartCoordinates[i].second) + (x2*y1) - (y2*x1)) / std::sqrt(std::pow(y2-y1, 2)+std::pow(x2-x1, 2));
-                //std::cout << x1 << ", " << y1 << ", " << x2 << ", " << y2 << ", " << distance << std::endl;
-            }// else
-             //   distance = 1;
+            }
 
             if (distance < threshold || i == point1 || i == point2) {
                 //Keep
@@ -179,7 +165,6 @@ void laserscanner::findLines(ConstLaserScanStampedPtr &msg)
                 keepIndex.push_back(i);
             }
         }
-
 
         if ((int)keep.size() >= lineThresh) {
 
@@ -190,13 +175,10 @@ void laserscanner::findLines(ConstLaserScanStampedPtr &msg)
                     keepIndex.erase(keepIndex.begin()+i, keepIndex.end());
                 }
             }
-            std::cout << cartCoordinates.size() << std::endl;
             for (int i = keepIndex.size() - 1; i >= 0; i--) {
                 cartCoordinates.erase(cartCoordinates.begin() + keepIndex[i]);
             }
-            std::cout << cartCoordinates.size() << std::endl;
             if ((int)keep.size() < lineThresh) {
-                std::cout << "hej " << keep.size() << std::endl;
                 continue;
             }
 
@@ -227,102 +209,81 @@ void laserscanner::findLines(ConstLaserScanStampedPtr &msg)
             param_a = (xy_bar - x_bar*y_bar) / (xsq_bar - std::pow(x_bar, 2));
             param_b = (xsq_bar * y_bar - x_bar * xy_bar) / (xsq_bar - std::pow(x_bar, 2));
             ransacLines.push_back(std::make_pair(param_a, param_b));
-            //std::cout << "y = " << param_a << "x + " << param_b << std::endl;
         }
 
-        if ((int)cartCoordinates.size() < lineThresh) {
-            //std::cout << find << std::endl;
+        if ((int)cartCoordinates.size() < lineThresh)
             break;
-        }
     }
 
     if (ransacLines.empty())
         ransacLines.push_back(std::make_pair(0, 0));
-    for (int i = 0; i < (int)ransacLines.size(); i++) {
-        //std::cout << "y = " << ransacLines[i].first << "x + " << ransacLines[i].second << std::endl;
-    }
 
     for (int i = 0; i < (int)startPoints.size(); i++) {
-        //std::cout << "Start, " << startPoints[i].first << ", " << startPoints[i].second << std::endl;
-        //std::cout << "End, " << endPoints[i].first << ", " << endPoints[i].second << std::endl;
+
+        //Intersection between regression line and line to startpoint.
+        intersectionMatrix startIntersection{
+            startPoints[i].first, startPoints[i].second,
+            0, 0,
+            5, ransacLines[i].first*5+ransacLines[i].second,
+            10, ransacLines[i].first*10+ransacLines[i].second
+        };
+
+        //Intersection between regression line and line to endpoint.
+        intersectionMatrix endIntersection{
+            endPoints[i].first, endPoints[i].second,
+            0, 0,
+            5, ransacLines[i].first*5+ransacLines[i].second,
+            10, ransacLines[i].first*10+ransacLines[i].second
+        };
+
+        regressionStart.push_back(std::make_pair(startIntersection.pointX, startIntersection.pointY));
+        regressionEnd.push_back(std::make_pair(endIntersection.pointX, endIntersection.pointY));
     }
 
-    std::vector<std::pair<float, float>> regStart;
-    std::vector<std::pair<float, float>> regEnd;
-    float setX1 = 5;
-    float setX2 = 10;
-
-    for (int i = 0; i < (int)startPoints.size(); i++) {
-        //Line 1
-        float xa1 = startPoints[i].first;
-        float ya1 = startPoints[i].second;
-        float x2 = 0;
-        float y2 = 0;
-        float xb1 = endPoints[i].first;
-        float yb1 = endPoints[i].second;
-        //Line 2
-        float x3 = setX1;
-        float y3 = ransacLines[i].first*setX1+ransacLines[i].second;
-        float x4 = setX2;
-        float y4 = ransacLines[i].first*setX2+ransacLines[i].second;
-
-        //Point for startpoint.
-        float sdx1 = xa1 * y2 - ya1 * x2;
-        float sdx2 = x3 * y4 - y3 * x4;
-        float sdx3 = xa1 - x2;
-        float sdx4 = x3 - x4;
-        float sdx5 = ya1 - y2;
-        float sdx6 = y3 - y4;
-        float intersectX1 = (sdx1 * sdx4 - sdx3 * sdx2) / (sdx3 * sdx6 - sdx5 * sdx4);
-
-        float sdy1 = sdx1;
-        float sdy2 = sdx2;
-        float sdy3 = sdx5;
-        float sdy4 = sdx6;
-        float sdy5 = sdx3;
-        float sdy6 = sdx4;
-        float intersectY1 = (sdy1 * sdy4 - sdy3 * sdy2) / (sdy5 * sdy4 - sdy3 * sdy6);
-
-        //Point for endpoint.
-        sdx1 = xb1 * y2 - yb1 * x2;
-        sdx2 = x3 * y4 - y3 * x4;
-        sdx3 = xb1 - x2;
-        sdx4 = x3 - x4;
-        sdx5 = yb1 - y2;
-        sdx6 = y3 - y4;
-        float intersectX2 = (sdx1 * sdx4 - sdx3 * sdx2) / (sdx3 * sdx6 - sdx5 * sdx4);
-
-        sdy1 = sdx1;
-        sdy2 = sdx2;
-        sdy3 = sdx5;
-        sdy4 = sdx6;
-        sdy5 = sdx3;
-        sdy6 = sdx4;
-        float intersectY2 = (sdy1 * sdy4 - sdy3 * sdy2) / (sdy5 * sdy4 - sdy3 * sdy6);
-
-        regStart.push_back(std::make_pair(intersectX1, intersectY1));
-        regEnd.push_back(std::make_pair(intersectX2, intersectY2));
-    }
-
-    #define PI 3.14159265
-    float xCoord;
-    float yCoord;
     //Find the points on the lines closest to the robot.
-    //for (int i = 0; i < (int)ransacLines.size(); i++) {
-    //
-    //        float perpSlope = (1/ransacLines[i].first)*(-1);
-    //        xCoord = ransacLines[i].second / (perpSlope-ransacLines[i].first);
-    //        yCoord = ransacLines[i].first * xCoord + ransacLines[i].second;
-    //
-    //        float closestPAngle = atan2(yCoord, xCoord);
-    //        float startAngle = atan2(startPoints[i].second, startPoints[i].first);
-    //        float endAngle = atan2(endPoints[i].second, endPoints[i].first);
-    //        //std::cout << "start: " << startAngle << " closest: " << closestPAngle << " end: " << endAngle << std::endl;
-    //        if (startAngle < closestPAngle && closestPAngle < endAngle)
-    //            closestPoints.push_back(std::make_pair(xCoord, yCoord));
-    //}
+    for (int i = 0; i < (int)ransacLines.size(); i++) {
 
-    testDraw(msg, regStart, regEnd, closestPoints);
-    //Make a new container for the lines here that deletes and overwrites in two lines to avoid an empty vector while finding new lines.
+        float perpSlope = (1/ransacLines[i].first)*(-1);
+        closestX = ransacLines[i].second / (perpSlope-ransacLines[i].first);
+        closestY = ransacLines[i].first * closestX + ransacLines[i].second;
 
+        float closestPAngle = atan2(closestY, closestX);
+        float startAngle = atan2(startPoints[i].second, startPoints[i].first);
+        float endAngle = atan2(endPoints[i].second, endPoints[i].first);
+        if (startAngle < closestPAngle && closestPAngle < endAngle)
+            closestPoints.push_back(std::make_pair(closestX, closestY));
+        else if ((0 < endAngle && endAngle < PI/2) || (-PI/2 < startAngle && startAngle < 0)) {
+            bool startOrEnd = pow(startPoints[i].first, 2)+pow(startPoints[i].second, 2) < pow(endPoints[i].first, 2)+pow(endPoints[i].second, 2) ? true : false;
+            closestX = startOrEnd ? startPoints[i].first : endPoints[i].first;
+            closestY = startOrEnd ? startPoints[i].second : endPoints[i].second;
+            closestPoints.push_back(std::make_pair(closestX, closestY));
+        }
+    }
+
+    //Determine the length and angle of the shortest line for the fuzzy controller.
+    if (closestPoints.size() > 1) {
+        for (int i = 1; i < (int)closestPoints.size(); i++) {
+            bool shortestLine = pow(closestPoints[i-1].first, 2)+pow(closestPoints[i-1].second, 2) < pow(closestPoints[i].first, 2)+pow(closestPoints[i].second, 2) ? true : false;
+            shortestLineLength = shortestLine ? pow(closestPoints[i-1].first, 2)+pow(closestPoints[i-1].second, 2) : pow(closestPoints[i].first, 2)+pow(closestPoints[i].second, 2);
+            shortestLineAngle = shortestLine ? atan2(closestPoints[i-1].second, closestPoints[i-1].first) : atan2(closestPoints[i].second, closestPoints[i].first);
+        }
+    } else if (closestPoints.size() == 1){
+        shortestLineLength = pow(closestPoints[0].first, 2)+pow(closestPoints[0].second, 2);
+        shortestLineAngle = atan2(closestPoints[0].second, closestPoints[0].first);
+    } else {
+        shortestLineLength = pow(msg->scan().range_max(), 2);
+        shortestLineAngle = 0;
+    }
+    shortestLineLength = sqrt(shortestLineLength);
+    std::cout << "Length: " << shortestLineLength << " Angle: " << shortestLineAngle << std::endl;
+
+    testDraw(msg, regressionStart, regressionEnd, closestPoints);
+}
+
+closestLine laserscanner::getClosestLine()
+{
+    closestLine line;
+    line.distance = shortestLineLength;
+    line.angle = shortestLineAngle;
+    return line;
 }

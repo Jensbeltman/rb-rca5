@@ -39,7 +39,7 @@ void obstacle_avoidance::init_controller()
     Odist->setName("Odist");
     Odist->setDescription("");
     Odist->setEnabled(true);
-    Odist->setRange(0.08, 5);
+    Odist->setRange(0.08, 10);
     Odist->setLockValueInRange(false);
     Odist->addTerm(new Ramp("far", 1, 5));
     Odist->addTerm(new Triangle("close", 0.2, 0.8, 1.5));
@@ -53,9 +53,11 @@ void obstacle_avoidance::init_controller()
     Odir->setEnabled(true);
     Odir->setRange(-2.26, 2.26);
     Odir->setLockValueInRange(false);
+    //Odir->addTerm(new Sigmoid("leftB", -1, -2.26));
     Odir->addTerm(new Ramp("left", 0, -2.26));
     Odir->addTerm(new Triangle("center", -0.3, 0, 0.3));
     Odir->addTerm(new Ramp("right", 0, 2.26));
+    //Odir->addTerm(new Sigmoid("rightB", 1, 2.26));
     engine->addInputVariable(Odir);
 
     //Outputvariable (steering direction):
@@ -69,9 +71,11 @@ void obstacle_avoidance::init_controller()
     Sdir->setDefuzzifier(new Centroid(100));
     Sdir->setDefaultValue(0);
     Sdir->setLockPreviousValue(false);
+    //Sdir->addTerm(new Ramp("hardleft", 0.5, 1));
     Sdir->addTerm(new Ramp("left", 0, 0.4));
     Sdir->addTerm(new Triangle("straight", -0.1, 0, 0.1));
     Sdir->addTerm(new Ramp("right", 0, -0.4));
+    //Sdir->addTerm(new Ramp("hardright", -0.5, -1));
     engine->addOutputVariable(Sdir);
 
     //Outputvariable (speed):
@@ -103,6 +107,10 @@ void obstacle_avoidance::init_controller()
     mamdani->addRule(Rule::parse("if Odist is veryclose then speed is backward", engine));
     mamdani->addRule(Rule::parse("if Odist is close and Odir is right then Sdir is left", engine));
     mamdani->addRule(Rule::parse("if Odist is close and Odir is left then Sdir is right", engine));
+    //mamdani->addRule(Rule::parse("if Odist is veryclose and Odir is right then Sdir is hardleft", engine));
+    //mamdani->addRule(Rule::parse("if Odist is veryclose and Odir is left then Sdir is hardright", engine));
+    //mamdani->addRule(Rule::parse("if Odist is veryclose and Odir is rightB then Sdir is left", engine));
+    //mamdani->addRule(Rule::parse("if Odist is veryclose and Odir is leftB then Sdir is right", engine));
     engine->addRuleBlock(mamdani);
 
     std::string status;

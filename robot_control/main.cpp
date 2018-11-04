@@ -226,12 +226,12 @@ int main(int _argc, char **_argv) {
   worldPublisher->WaitForConnection();
   worldPublisher->Publish(controlMessage);
 
-/*
+
   const int key_left = 81;
   const int key_up = 82;
   const int key_down = 84;
   const int key_right = 83;
-*/
+
   const int key_esc = 27;
 
   float speed = 0.0;
@@ -258,9 +258,8 @@ int main(int _argc, char **_argv) {
     if (key == key_esc)
       break;
 
-
-
     //Determine if a marble is present.
+    /*
     if (marbleDist) {
         controller2.setValues(scanner.getClosestScan().distance, scanner.getClosestScan().direction, marbleDist);
 
@@ -276,8 +275,10 @@ int main(int _argc, char **_argv) {
         dir = 0;
         //std::cout << "No AI" << std::endl;
     } else {
+    */
         //Set value Odir from getClosestDir and set value Odist from getClosestDist
-        controller.setValues(scanner.getClosestScan().distance, scanner.getClosestScan().direction);
+        //controller.setValues(scanner.getClosestScan().distance, scanner.getClosestScan().direction);
+        controller.setValues(scanner.getClosestLine().distance, scanner.getClosestLine().angle);
 
         //Engine process here.
         controller.process();
@@ -289,7 +290,7 @@ int main(int _argc, char **_argv) {
         dir = controller.getValues().direction;
 
         //std::cout << "No marble" << std::endl;
-    }
+    //}
 
 
 /*
