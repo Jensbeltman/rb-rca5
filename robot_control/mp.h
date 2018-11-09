@@ -8,10 +8,13 @@
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/transport/transport.hh>
 
+#include <line.h>
 #include <localizor.h>
+#include <array>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <typeinfo>
 #include <vector>
 using namespace std;
 using namespace cv;
@@ -28,8 +31,12 @@ struct corner {
 class MP {
  public:
   MP(Mat);
+  void findlines();
+  void visionMap();
   void cnrHeat();
   void cnrHeatC();
+  // void visionMap();//too heavy
+
   void drawMap();
   void localPoseCallback(ConstPosesStampedPtr &_msg);
   void poseCallback(ConstPosesStampedPtr &_msg);
@@ -38,16 +45,19 @@ class MP {
  private:
   Mat bitmap;
   Mat cnrheatmap;
+  Mat vMap;
+  Rect bitmapRect;
 
-  int findCorners(Mat m);
+  int findCorners(Mat m, vector<corner> &);
   void drawCorners();
 
   vector<corner> cnr;
+  vector<corner> cnrV;
+  vector<Line> mapLines;
 
   Mat display;
-
   Mat cornerkernel;
-
+  bool pixelInImage();
   // Gazebo setup
   gazebo::transport::NodePtr node;
   gazebo::transport::SubscriberPtr poseSubscriber;

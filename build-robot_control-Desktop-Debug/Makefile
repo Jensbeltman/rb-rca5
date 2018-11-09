@@ -54,12 +54,14 @@ SOURCES       = ../robot_control/main.cpp \
 		../robot_control/localizor.cpp \
 		../robot_control/laserscanner.cpp \
 		../robot_control/mp.cpp \
-		../robot_control/montecarlo.cpp 
+		../robot_control/montecarlo.cpp \
+		../robot_control/line.cpp 
 OBJECTS       = main.o \
 		localizor.o \
 		laserscanner.o \
 		mp.o \
-		montecarlo.o
+		montecarlo.o \
+		line.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -136,11 +138,13 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../robot_control/robot_control.pro localizor.h \
 		laserscanner.h \
 		mp.h \
-		montecarlo.h ../robot_control/main.cpp \
+		montecarlo.h \
+		line.h ../robot_control/main.cpp \
 		../robot_control/localizor.cpp \
 		../robot_control/laserscanner.cpp \
 		../robot_control/mp.cpp \
-		../robot_control/montecarlo.cpp
+		../robot_control/montecarlo.cpp \
+		../robot_control/line.cpp
 QMAKE_TARGET  = robot_control
 DESTDIR       = 
 TARGET        = robot_control
@@ -345,21 +349,34 @@ compiler_clean:
 ####### Compile
 
 main.o: ../robot_control/main.cpp ../robot_control/localizor.h \
+		../robot_control/montecarlo.h \
+		../robot_control/laserscanner.h \
 		../robot_control/mp.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../robot_control/main.cpp
 
-localizor.o: ../robot_control/localizor.cpp ../robot_control/localizor.h
+localizor.o: ../robot_control/localizor.cpp ../robot_control/localizor.h \
+		../robot_control/montecarlo.h \
+		../robot_control/laserscanner.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o localizor.o ../robot_control/localizor.cpp
 
 laserscanner.o: ../robot_control/laserscanner.cpp ../robot_control/laserscanner.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o laserscanner.o ../robot_control/laserscanner.cpp
 
 mp.o: ../robot_control/mp.cpp ../robot_control/mp.h \
-		../robot_control/localizor.h
+		../robot_control/localizor.h \
+		../robot_control/montecarlo.h \
+		../robot_control/laserscanner.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mp.o ../robot_control/mp.cpp
 
-montecarlo.o: ../robot_control/montecarlo.cpp 
+montecarlo.o: ../robot_control/montecarlo.cpp ../robot_control/montecarlo.h \
+		../robot_control/laserscanner.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o montecarlo.o ../robot_control/montecarlo.cpp
+
+line.o: ../robot_control/line.cpp ../robot_control/line.h \
+		../robot_control/localizor.h \
+		../robot_control/montecarlo.h \
+		../robot_control/laserscanner.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o line.o ../robot_control/line.cpp
 
 ####### Install
 

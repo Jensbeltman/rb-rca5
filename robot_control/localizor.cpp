@@ -77,39 +77,38 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
 	  p_l = M_PI + atan2(nqw, nqy);
 	}
   }
-  if(cnrInrange(100))
-  {
-      nmcA = 80;
-  }else{
-      nmcA = max(0, nmcA - 1);
+  if (cnrInrange(100)) {
+	nmcA = 80;
+  } else {
+	nmcA = max(0, nmcA - 1);
   }
   if (nmcA > 0) {
-    if(!mcActive) {
-        mcActive = true;
-        montecarlo.reDistribute(Point2f(mx*4,my*4),phi);
-    }else{
-        if(nMonte++ >= 0){
-            tx += P2G * montecarlo.getBestPos().x;
-            ty += P2G * montecarlo.getBestPos().y;
-            tphi += montecarlo.getBestDir();
-        }
-        if(nMonte >= 20){
-            nMonte = -40;
-            x = tx/20.;
-            y = ty/20.;
-            phi = tphi/20.;
-            tx = 0;
-            ty = 0;
-            tphi = 0;
-            mx = x * G2P + bitmap.cols / 2;
-            my = -y * G2P + bitmap.rows / 2;
-            //montecarlo.reDistribute(Point2f(mx*4,my*4),phi); // enten eller :
-            montecarlo.setConf(Point2f(4 * mx, 4 * my), (float)phi, true);
-        }
+	if (!mcActive) {
+	  mcActive = true;
+	  montecarlo.reDistribute(Point2f(mx * 4, my * 4), phi);
+	} else {
+	  if (nMonte++ >= 0) {
+		tx += P2G * montecarlo.getBestPos().x;
+		ty += P2G * montecarlo.getBestPos().y;
+		tphi += montecarlo.getBestDir();
+	  }
+	  if (nMonte >= 20) {
+		nMonte = -40;
+		x = tx / 20.;
+		y = ty / 20.;
+		phi = tphi / 20.;
+		tx = 0;
+		ty = 0;
+		tphi = 0;
+		mx = x * G2P + bitmap.cols / 2;
+		my = -y * G2P + bitmap.rows / 2;
+		// montecarlo.reDistribute(Point2f(mx*4,my*4),phi); // enten eller :
+		montecarlo.setConf(Point2f(4 * mx, 4 * my), (float)phi, true);
+	  }
     }
-  }else{
-      mcActive = false;
-      nMonte = -40;
+  } else {
+	mcActive = false;
+	nMonte = -40;
   }
 
   if (!first) {
@@ -148,7 +147,7 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
 	prev_p_r = p_r;
 	prev_t = t;
 
-    const double l = 0.34;// + 0.05;
+	const double l = 0.34;  // + 0.05;
 	double R, omega;
 
     double dpx = 0;

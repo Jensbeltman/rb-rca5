@@ -9,6 +9,7 @@
 #include <localizor.h>
 #include <mp.h>
 #include <mutex>
+#include "line.h"
 using namespace std;
 using namespace cv;
 
@@ -30,6 +31,21 @@ void cameraCallback(ConstImageStampedPtr &msg) {
 }
 
 int main(int _argc, char **_argv) {
+  //  vector<Line> lines;
+  //  lines.push_back(Line(Point2f(0, 7), Point2f(5, 5)));
+  //  lines.push_back(Line(Point2f(2, 9), Point2f(4, 5)));
+  //  lines.push_back(Line(Point2f(-1, 5), Point2f(1, 3)));
+  //  lines.push_back(Line(Point2f(2, 6), Point2f(4, 12)));
+  //  lines.push_back(Line(Point2f(-1, -1), Point2f(1, -1)));
+
+  //  Line l(Point2f(0, 0), Point2f(3, 9));
+  //  cout << l.p1 << l.p2 << endl;
+  //  l.nearestIntersection(lines);
+
+  //  cout << l.p1 << l.p2 << endl;
+
+  //  waitKey();
+
   cv::Mat mpp =
 	  imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
 
@@ -73,6 +89,7 @@ int main(int _argc, char **_argv) {
 	mp.drawMap();
 	mp.localizor.printPose();
 	mp.localizor.montecarlo.show();
+
 	gazebo::common::Time::MSleep(10);
 
 	mutex2.lock();
@@ -103,7 +120,6 @@ int main(int _argc, char **_argv) {
 	gazebo::msgs::Set(&msg, pose);
 	movementPublisher->Publish(msg);
   }
-
   // Make sure to shut everything down.
   gazebo::client::shutdown();
 }
