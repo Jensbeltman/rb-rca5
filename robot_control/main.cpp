@@ -86,9 +86,9 @@ int main(int _argc, char **_argv) {
 
   // Loop
   while (true) {
-	mp.drawMap();
-	mp.localizor.printPose();
-	mp.localizor.montecarlo.show();
+	//	mp.drawMap();
+	//	mp.localizor.printPose();
+	//	mp.localizor.montecarlo.show();
 
 	gazebo::common::Time::MSleep(10);
 

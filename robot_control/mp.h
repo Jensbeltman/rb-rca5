@@ -10,6 +10,7 @@
 
 #include <line.h>
 #include <localizor.h>
+#include <algorithm>
 #include <array>
 #include <iomanip>
 #include <iostream>
@@ -24,14 +25,14 @@ struct corner {
   Point P;
   Point D;
   char type;
-  int seenBy = 0;
-  float score = 0;
+  float angle;
 };
 
 class MP {
  public:
   MP(Mat);
   void findlines();
+  void genVisCnr();
   void visionMap();
   void cnrHeat();
   void cnrHeatC();
@@ -47,6 +48,8 @@ class MP {
   Mat cnrheatmap;
   Mat vMap;
   Rect bitmapRect;
+
+  vector<corner *> **visCnr;
 
   int findCorners(Mat m, vector<corner> &);
   void drawCorners();

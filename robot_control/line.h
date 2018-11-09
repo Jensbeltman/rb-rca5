@@ -25,7 +25,8 @@ class Line {
   Line(Point2f, Point2f);
   bool nearestIntersection(vector<Line>);
   void setLenth(float);
-  float getAngle();
+  float angle;
+
   Point2f p1, p2;
 };
 

@@ -2,7 +2,9 @@
 
 Line::Line() {}
 
-Line::Line(Point2f p1, Point2f p2) : p1{p1}, p2{p2} {}
+Line::Line(Point2f p1, Point2f p2) : p1{p1}, p2{p2} {
+  angle = atan2(p2.y - p1.y, p2.x - p1.x);
+}
 
 bool Line::nearestIntersection(vector<Line> v) {
   Point2f nearestI;
@@ -33,5 +35,3 @@ bool Line::nearestIntersection(vector<Line> v) {
 }
 
 void Line::setLenth(float l) { p2 = p1 + l * (p1 - p2) / norm(p1 - p2); }
-
-float Line::getAngle() { return atan2(p2.y - p1.y, p2.x - p1.x); }
