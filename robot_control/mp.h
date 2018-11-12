@@ -44,13 +44,12 @@ class MP {
   void localPoseCallback(ConstPosesStampedPtr &_msg);
   void poseCallback(ConstPosesStampedPtr &_msg);
   Localizor localizor;
-
- private:
   Mat bitmap;
   Mat cnrheatmap;
   Mat vMap;
   Rect bitmapRect;
 
+ private:
   vector<corner *> **visCnr;
   vector<VisiLibity::Polygon> poly;
   int findCorners(Mat m, vector<corner> &);

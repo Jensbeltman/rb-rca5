@@ -47,7 +47,7 @@ int main(int _argc, char **_argv) {
   //  waitKey();
 
   cv::Mat mpp =
-	  imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
+	  imread("../models/testworld/meshes/floor_plan.png", IMREAD_COLOR);
 
   // Load gazebo
   gazebo::client::setup(_argc, _argv);

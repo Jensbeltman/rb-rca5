@@ -43,7 +43,9 @@ MP::MP(Mat bmap) {
 void MP::findlines() {
   Mat lMap;
 
-  resize(bitmap, lMap, vMap.size() / 4, 0, 0, INTER_NEAREST);
+  int vScale = 20;
+
+  resize(bitmap, lMap, bitmap.size() * vScale, 0, 0, INTER_NEAREST);
   vector<vector<Point>> contourArr;
   //  lMap = 255 - lMap;
   findContours(lMap, contourArr, RETR_TREE, CHAIN_APPROX_SIMPLE);
@@ -57,18 +59,8 @@ void MP::findlines() {
 	int conSize = contourArr[con].size();
 	for (int i = 0; i < conSize; i++) {
 	  if (i == 0) {
-		if (lMap.at<Vec3b>(Point(contourArr[con][i].x + 1,
-								 contourArr[con][i].y)) == Vec3b(0, 0, 0)) {
-		  poly[con].push_back(VisiLibity::Point(contourArr[con][i].x,
-												contourArr[con][i].y - 1));
-		  prev_point =
-			  VisiLibity::Point(contourArr[con][i].x, contourArr[con][i].y - 1);
-		} else {
-		  poly[con].push_back(
-			  VisiLibity::Point(contourArr[con][i].x, contourArr[con][i].y));
-		  prev_point =
-			  VisiLibity::Point(contourArr[con][i].x, contourArr[con][i].y);
-		}
+		poly[con].push_back(VisiLibity::Point((contourArr[con][i].x + 0.5),
+											  (contourArr[con][i].y + 0.5)));
 	  } else {
 		int dx = contourArr[con][i].x - contourArr[con][i - 1].x;
 		int dy = contourArr[con][i].y - contourArr[con][i - 1].y;
@@ -80,25 +72,31 @@ void MP::findlines() {
 		}
 
 		if (i < conSize) {
-		  poly[con].push_back(
-			  VisiLibity::Point(prev_point.x() + dx, prev_point.y() + dy));
-		  prev_point =
-			  VisiLibity::Point(prev_point.x() + dx, prev_point.y() + dy);
+		  poly[con].push_back(VisiLibity::Point((contourArr[con][i].x + 0.5),
+												(contourArr[con][i].y + 0.5)));
+		  line(lMap, contourArr[con][i - 1], contourArr[con][i],
+			   Scalar(0, 255, 0));
 		}
 	  }
 	}
   }
-  const int s = 80;
+
+  int mScale = 1;
+  resize(lMap, lMap, lMap.size() / (vScale), 0, 0, INTER_NEAREST);
+
+  const int s = 849881 / 255;
 
   VisiLibity::Environment env(poly);
   VisiLibity::Visibility_Polygon Vision;
   double maxA = 0;
-  for (int x = 0; x < lMap.cols; x++) {
+  for (int x = 0; x < lMap.cols; x += 1) {
 	cout << x << endl;
-	for (int y = 0; y < lMap.rows; y++) {
+	for (int y = 0; y < lMap.rows; y += 1) {
 	  if (lMap.at<Vec3b>(y, x) != Vec3b(0, 0, 0)) {
 		Vision = VisiLibity::Visibility_Polygon(
-			VisiLibity::Point((double)(x + 0.5), (double)(y + 0.5)), env, 0.5);
+			VisiLibity::Point((double)((x + 0.5) * (vScale)),
+							  (double)((y + 0.5) * (vScale))),
+			env);
 		double area = abs(Vision.area());
 		maxA = max(maxA, area);
 		// cout << area << endl;
@@ -108,7 +106,9 @@ void MP::findlines() {
 	}
   }
   cout << maxA;
+
   imshow("testmap", lMap);
+  ;
 }
 
 void MP::genVisCnr() {
