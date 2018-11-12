@@ -17,6 +17,8 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
+#include "VisiLibity1/src/visilibity.hpp"
+
 using namespace std;
 using namespace cv;
 
@@ -50,7 +52,7 @@ class MP {
   Rect bitmapRect;
 
   vector<corner *> **visCnr;
-
+  vector<VisiLibity::Polygon> poly;
   int findCorners(Mat m, vector<corner> &);
   void drawCorners();
 

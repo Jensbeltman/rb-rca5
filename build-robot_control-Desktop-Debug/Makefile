@@ -55,13 +55,15 @@ SOURCES       = ../robot_control/main.cpp \
 		../robot_control/laserscanner.cpp \
 		../robot_control/mp.cpp \
 		../robot_control/montecarlo.cpp \
-		../robot_control/line.cpp 
+		../robot_control/line.cpp \
+		../robot_control/VisiLibity1/src/visilibity.cpp 
 OBJECTS       = main.o \
 		localizor.o \
 		laserscanner.o \
 		mp.o \
 		montecarlo.o \
-		line.o
+		line.o \
+		visilibity.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -139,12 +141,14 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		laserscanner.h \
 		mp.h \
 		montecarlo.h \
-		line.h ../robot_control/main.cpp \
+		line.h \
+		VisiLibity1/src/visilibity.hpp ../robot_control/main.cpp \
 		../robot_control/localizor.cpp \
 		../robot_control/laserscanner.cpp \
 		../robot_control/mp.cpp \
 		../robot_control/montecarlo.cpp \
-		../robot_control/line.cpp
+		../robot_control/line.cpp \
+		../robot_control/VisiLibity1/src/visilibity.cpp
 QMAKE_TARGET  = robot_control
 DESTDIR       = 
 TARGET        = robot_control
@@ -351,7 +355,9 @@ compiler_clean:
 main.o: ../robot_control/main.cpp ../robot_control/localizor.h \
 		../robot_control/montecarlo.h \
 		../robot_control/laserscanner.h \
-		../robot_control/mp.h
+		../robot_control/mp.h \
+		../robot_control/line.h \
+		../robot_control/VisiLibity1/src/visilibity.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../robot_control/main.cpp
 
 localizor.o: ../robot_control/localizor.cpp ../robot_control/localizor.h \
@@ -363,9 +369,11 @@ laserscanner.o: ../robot_control/laserscanner.cpp ../robot_control/laserscanner.
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o laserscanner.o ../robot_control/laserscanner.cpp
 
 mp.o: ../robot_control/mp.cpp ../robot_control/mp.h \
+		../robot_control/line.h \
 		../robot_control/localizor.h \
 		../robot_control/montecarlo.h \
-		../robot_control/laserscanner.h
+		../robot_control/laserscanner.h \
+		../robot_control/VisiLibity1/src/visilibity.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mp.o ../robot_control/mp.cpp
 
 montecarlo.o: ../robot_control/montecarlo.cpp ../robot_control/montecarlo.h \
@@ -377,6 +385,9 @@ line.o: ../robot_control/line.cpp ../robot_control/line.h \
 		../robot_control/montecarlo.h \
 		../robot_control/laserscanner.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o line.o ../robot_control/line.cpp
+
+visilibity.o: ../robot_control/VisiLibity1/src/visilibity.cpp ../robot_control/VisiLibity1/src/visilibity.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o visilibity.o ../robot_control/VisiLibity1/src/visilibity.cpp
 
 ####### Install
 
