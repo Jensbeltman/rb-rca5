@@ -47,11 +47,11 @@ int main(int _argc, char **_argv) {
   //  waitKey();
 
   cv::Mat mpp =
-	  imread("../models/testworld/meshes/floor_plan.png", IMREAD_COLOR);
+	  imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
 
   // Load gazebo
   gazebo::client::setup(_argc, _argv);
-  namedWindow("camera", WINDOW_FREERATIO);
+  // namedWindow("camera", WINDOW_FREERATIO);
 
   // initialise a MP object for localization
   MP mp(mpp);
@@ -60,8 +60,9 @@ int main(int _argc, char **_argv) {
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
   node->Init();
 
-  gazebo::transport::SubscriberPtr cameraSubscriber =
-	  node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
+  //  gazebo::transport::SubscriberPtr cameraSubscriber =
+  //	  node->Subscribe("~/pioneer2dx/camera/link/camera/image",
+  // cameraCallback);
 
   // Publish to the robot vel_cmd topic
   gazebo::transport::PublisherPtr movementPublisher =

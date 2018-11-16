@@ -1,8 +1,6 @@
 #ifndef MP_H
 #define MP_H
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #include <gazebo/gazebo_client.hh>
 #include <gazebo/msgs/msgs.hh>
@@ -17,10 +15,16 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
-#include "VisiLibity1/src/visilibity.hpp"
+#include "Visibility/visibility.hpp"
 
 using namespace std;
 using namespace cv;
+using namespace geometry;
+
+using vector_type = geometry::vec2;
+using segment_type = geometry::line_segment<vector_type>;
+using segment_comparer_type = geometry::line_segment_dist_comparer<vector_type>;
+using angle_comparer_type = geometry::angle_comparer<vector_type>;
 
 // x,y cordinates and type as in open(i)/closed(o) (belov/above 180 deg)
 struct corner {
@@ -33,35 +37,44 @@ struct corner {
 class MP {
  public:
   MP(Mat);
-  void findlines();
-  void genVisCnr();
-  void visionMap();
+
+  void genVisMap(Mat bitmap, Mat dst, int scale);
+  void genVisPoly();
+  void localMaxima(const Mat image, vector<Point> &maximas, bool);
+  void drawPoly2(Mat image, vector<Point> &polygon, Scalar color);
+
   void cnrHeat();
   void cnrHeatC();
   // void visionMap();//too heavy
 
-  void drawMap();
   void localPoseCallback(ConstPosesStampedPtr &_msg);
   void poseCallback(ConstPosesStampedPtr &_msg);
+  void findAreas(Mat bitmap, vector<Rect> &area);
+  bool isBlackBetween(Mat image, Point a, Point d, int l);
+  void drawRect(Mat m);
+  static bool largestArea(Rect const &a, Rect const &b);
+
   Localizor localizor;
   Mat bitmap;
   Mat cnrheatmap;
-  Mat vMap;
+  Mat visionMap;
   Rect bitmapRect;
 
  private:
   vector<corner *> **visCnr;
-  vector<VisiLibity::Polygon> poly;
+
   int findCorners(Mat m, vector<corner> &);
   void drawCorners();
 
   vector<corner> cnr;
   vector<corner> cnrV;
-  vector<Line> mapLines;
+  vector<Rect> area;
+  vector<Point> mxVisPts;
+
+  int vMapScale;
 
   Mat display;
   Mat cornerkernel;
-  bool pixelInImage();
   // Gazebo setup
   gazebo::transport::NodePtr node;
   gazebo::transport::SubscriberPtr poseSubscriber;

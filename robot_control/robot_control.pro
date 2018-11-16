@@ -8,8 +8,8 @@ SOURCES += main.cpp \
     laserscanner.cpp \
     mp.cpp \
     montecarlo.cpp \
-    line.cpp \
-    VisiLibity1/src/visilibity.cpp \
+    line.cpp
+
 
 
 CONFIG += link_pkgconfig
@@ -22,4 +22,7 @@ HEADERS += \
     mp.h \
     montecarlo.h \
     line.h \
-    VisiLibity1/src/visilibity.hpp \
+    Visibility/visibility.hpp \
+    Visibility/floats.hpp \
+    Visibility/vector2.hpp \
+    Visibility/primitives.hpp
