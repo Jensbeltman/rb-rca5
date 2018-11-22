@@ -39,11 +39,6 @@ class MP {
   MP(Mat);
 
   void genVisMap(Mat bitmap, Mat dst, int scale);
-  void genVisPoly();
-  void localMaxima(const Mat image, vector<Point> &maximas, bool);
-  void drawPoly2(Mat image, vector<Point> &polygon, Scalar color);
-
-  void cnrHeat();
   void cnrHeatC();
   // void visionMap();//too heavy
 
@@ -53,6 +48,8 @@ class MP {
   bool isBlackBetween(Mat image, Point a, Point d, int l);
   void drawRect(Mat m);
   static bool largestArea(Rect const &a, Rect const &b);
+  static bool mostVision(pair<Point, vector<Point>> const &a,
+						 pair<Point, vector<Point>> const &b);
 
   Localizor localizor;
   Mat bitmap;
@@ -61,6 +58,13 @@ class MP {
   Rect bitmapRect;
 
  private:
+  corner nextCorner(corner cc, vector<corner> cnrs, bool x);
+  void removeCnr(corner c, vector<corner> &cnrs);
+  Point cnr2pos(corner c);
+  void genVisPoly();
+  void localMaxima(const Mat image, vector<Point> &maximas, bool);
+  void drawPoly2(Mat image, vector<Point> &polygon, Scalar color);
+
   vector<corner *> **visCnr;
 
   int findCorners(Mat m, vector<corner> &);
@@ -70,10 +74,12 @@ class MP {
   vector<corner> cnrV;
   vector<Rect> area;
   vector<Point> mxVisPts;
+  vector<pair<Point, vector<Point>>> mxVisPoly;
 
   int vMapScale;
 
   Mat display;
+  Mat display2;
   Mat cornerkernel;
   // Gazebo setup
   gazebo::transport::NodePtr node;

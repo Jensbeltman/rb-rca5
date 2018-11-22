@@ -2,6 +2,7 @@
 
 MP::MP(Mat bmap) {
   namedWindow("map", WINDOW_FREERATIO);
+  namedWindow("rectmap", WINDOW_FREERATIO);
   namedWindow("testmap", WINDOW_FREERATIO);
   namedWindow("mask", WINDOW_FREERATIO);
   namedWindow("testmap2", WINDOW_FREERATIO);
@@ -10,7 +11,7 @@ MP::MP(Mat bmap) {
   cnrheatmap = bmap;
   resize(bitmap, visionMap, bitmap.size(), 0, 0, INTER_NEAREST);
   display = bmap.clone();
-
+  display2 = bmap.clone();
   cornerkernel = (Mat_<uchar>(2, 2) << 1, 3, 7, 5);
   visCnr = new vector<corner*>*[bitmap.cols];
   for (int i = 0; i < bitmap.cols; i++) {
@@ -20,8 +21,8 @@ MP::MP(Mat bmap) {
   int mScale = 1;
 
   findCorners(bitmap, cnr);
-  // findAreas(bitmap, area);
-  // drawRect(display);
+  findAreas(bitmap, area);
+  drawRect(display2);
 
   // cnrHeatC();
   genVisMap(bitmap, visionMap, mScale);
@@ -47,54 +48,52 @@ void MP::genVisMap(Mat src, Mat vMap, int mapScale) {
   resize(src, vMap, src.size() * mapScale, 0, 0, INTER_NEAREST);
   vMap.convertTo(vMap, CV_32FC1);
 
-  const int lineScale = 20;
+  const int lineScale = 1;
 
-  Mat lMap;
-  resize(src, lMap, src.size() * lineScale, 0, 0, INTER_NEAREST);
+  //  Mat lMap;
+  //  resize(src, lMap, src.size() * lineScale, 0, 0, INTER_NEAREST);
 
-  vector<vector<Point>> contourArr;
+  //  vector<vector<Point>> contourArr;
 
-  lMap = 255 - lMap;
-  findContours(lMap, contourArr, RETR_TREE, CHAIN_APPROX_SIMPLE);
-
+  //  lMap = 255 - lMap;
+  //  findContours(lMap, contourArr, RETR_TREE, CHAIN_APPROX_SIMPLE);
+  vector<corner> cnr_t;
   vector<segment_type> lines;
-  Point2f conP;
-  Point2f prev_conP;
-  Point2f dxdy;
   const Point2f offset = Point2f(0.5, 0.5);
 
-  for (uint con = 0; con < contourArr.size(); con++) {
-	int conSize = contourArr[con].size();
-	for (int i = 1; i < conSize; i++) {
-	  conP = Point2f(contourArr[con][i].x + offset.x,
-					 contourArr[con][i].y + offset.y);
-	  prev_conP = Point2f(contourArr[con][i - 1].x + offset.x,
-						  contourArr[con][i - 1].y + offset.y);
-	  dxdy = conP - prev_conP;
+  findCorners(bitmap, cnr_t);
+  bool x;
+  Point p1, p2;
+  corner sc, cc, nc;
+  while (!cnr_t.empty()) {
+	x = true;
+	sc = cnr_t[0];
+	cc = nextCorner(sc, cnr_t, x);
+	nc = cc;
+	p1 = cnr2pos(sc);
+	p2 = cnr2pos(cc);
+	lines.push_back(segment_type({{p1.x, p1.y}, {p2.x, p2.y}}));
 
-	  if (abs(dxdy.x) < 2 && abs(dxdy.y) < 2) {
-		i++;
-		conP = Point2f(contourArr[con][i].x + offset.x,
-					   contourArr[con][i].y + offset.y);
-		prev_conP = Point2f(contourArr[con][i - 1].x + offset.x,
-							contourArr[con][i - 1].y + offset.y);
-		dxdy = conP - prev_conP;
-	  }
-
-	  if (i < conSize) {
-		lines.push_back(
-			segment_type({{prev_conP.x, prev_conP.y}, {conP.x, conP.y}}));
+	while (nc.P != sc.P) {
+	  x = !x;
+	  nc = nextCorner(cc, cnr_t, x);
+	  p1 = cnr2pos(cc);
+	  p2 = cnr2pos(nc);
+	  if (nc.P == sc.P) {
+		lines.push_back(segment_type({{p1.x, p1.y}, {p2.x, p2.y}}));
+		removeCnr(cc, cnr_t);
+		removeCnr(nc, cnr_t);
+		break;
+	  } else {
+		lines.push_back(segment_type({{p1.x, p1.y}, {p2.x, p2.y}}));
+		removeCnr(cc, cnr_t);
+		cc = nc;
 	  }
 	}
-
-	lines.push_back(segment_type(
-		{{(contourArr[con][conSize - 1].x + 0.5),
-		  (contourArr[con][conSize - 1].y + 0.5)},
-		 {(contourArr[con][0].x + 0.5), (contourArr[con][0].y + 0.5)}}));
   }
 
-  float m2l = lineScale / mapScale;
-  float l2m = (float)mapScale / (float)lineScale;
+  float m2l = 1.0 / mapScale;
+  float l2m = (float)mapScale / 1.0f;
 
   float area = 0;
 
@@ -124,18 +123,15 @@ void MP::genVisMap(Mat src, Mat vMap, int mapScale) {
   }
   // cout << "channels" << vMap.channels();
 
-  localMaxima(vMap, mxVisPts, true);
-
   Mat outImg;
 
   // imshow("testmap", vMap);
   normalize(vMap, vMap, 0, 1, NORM_MINMAX);
+  localMaxima(vMap, mxVisPts, true);
   imshow("map", vMap);
-  vMap.convertTo(outImg, CV_8UC3, 255);
-  cvtColor(outImg, outImg, COLOR_GRAY2BGR);
-  imshow("testmap", outImg);
 
   // cout << "mxVisPts.size()=" << mxVisPts;
+  mxVisPoly.resize(mxVisPts.size());
   for (uint i = 0; i < mxVisPts.size(); i++) {
 	float X = mxVisPts[i].x + 0.5;
 	float Y = mxVisPts[i].y + 0.5;
@@ -144,17 +140,101 @@ void MP::genVisMap(Mat src, Mat vMap, int mapScale) {
 	vector<vec2> vision =
 		visibility_polygon(vector_type{XYS}, lines.begin(), lines.end());
 
-	vector<Point> pts;
+	mxVisPoly[i].first = mxVisPts[i];
+	mxVisPoly[i].second.resize(vision.size());
+	for (uint j = 0; j < vision.size(); j++) {
+	  mxVisPoly[i].second[j] = Point(vision[j].x * l2m, vision[j].y * l2m);
+	}
+	display.at<Vec3b>(mxVisPts[i]) = Vec3b(0, 200, 0);
+  }
+  sort(mxVisPoly.begin(), mxVisPoly.end(), &mostVision);
 
-	for (uint i = 0; i < vision.size(); i++) {
-	  pts.push_back(Point(vision[i].x * l2m, vision[i].y * l2m));
+  Mat temp = display.clone();
+  float coverage = 0, temp_coverage = 0;
+
+  cout << "The amount of maximas is: " << mxVisPoly.size() << endl;
+  for (int i = 0; i < mxVisPoly.size(); i++) {
+	drawPoly2(temp, mxVisPoly[i].second, Scalar(200, 0, 0));
+	float b = 0;
+	for (int x = 0; x < temp.cols; x++) {
+	  for (int y = 0; y < temp.rows; y++) {
+		if (temp.at<Vec3b>(y, x) != Vec3b(255, 255, 255)) b++;
+	  }
+	}
+	temp_coverage = b / (float)(temp.rows * temp.cols);
+
+	if ((temp_coverage - coverage) > 0.1) {
+	  drawPoly2(display, mxVisPoly[i].second, Scalar(200, 0, 0));
+	  coverage = temp_coverage;
+	} else
+	  temp = display.clone();
+
+	cout << "Point " << i << " coverage is " << setw(5) << coverage << endl;
+	imshow("testmap", display);
+	waitKey();
+  }
+}
+
+corner MP::nextCorner(corner cc, vector<corner> cnrs, bool x) {
+  corner c, nc;
+  bool first = true;
+  if (cc.type == 'o') {
+	cc.D.x = cc.D.x * -1;
+	cc.D.y = cc.D.y * -1;
+  }
+
+  if (x) {
+	for (int i = 0; i < cnrs.size(); i++) {
+	  c = cnrs[i];
+	  if (cc.D.x == 1)
+		if (c.P.x > cc.P.x && c.P.y == cc.P.y)
+		  if (nc.P.x > c.P.x || first) {
+			nc = c;
+			first = false;
+		  }
+	  if (cc.D.x == -1)
+		if (c.P.x < cc.P.x && c.P.y == cc.P.y)
+		  if (nc.P.x < c.P.x || first) {
+			nc = c;
+			first = false;
+		  }
+	}
+  }
+  if (!x)
+	for (int i = 0; i < cnrs.size(); i++) {
+	  c = cnrs[i];
+	  if (cc.D.y == 1)
+		if (c.P.y > cc.P.y && c.P.x == cc.P.x)
+		  if (nc.P.y > c.P.y || first) {
+			nc = c;
+			first = false;
+		  }
+	  if (cc.D.y == -1)
+		if (c.P.y < cc.P.y && c.P.x == cc.P.x)
+		  if (nc.P.y < c.P.y || first) {
+			nc = c;
+			first = false;
+		  }
 	}
 
-	drawPoly2(outImg, pts, Scalar(200, 0, 0));
-	imshow("testmap", outImg);
-	waitKey();
-	pts.clear();
-  }
+  return nc;
+}
+
+void MP::removeCnr(corner c, vector<corner>& cnrs) {
+  for (int i = 0; i < cnrs.size(); i++)
+	if (cnrs[i].P == c.P) cnrs.erase(cnrs.begin() + i);
+}
+
+Point MP::cnr2pos(corner c) {
+  Point np;
+  if (c.D == Point(-1, -1))
+	return (c.P + Point(1, 1));
+  else if (c.D.x == -1)
+	return (c.P + Point(1, 0));
+  else if (c.D.y == -1)
+	return (c.P + Point(0, 1));
+  else
+	return c.P;
 }
 
 void MP::genVisPoly() {}
@@ -165,7 +245,7 @@ void MP::localMaxima(const Mat image, vector<Point>& pts,
 
   // find pixels that are equal to the local neighborhood not maximum
   // (including 'plateaus')
-  Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(14, 14));
+  Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(12, 12));
   dilate(image, mask, kernel);
   compare(image, mask, mask, cv::CMP_GE);
   // optionally filter out pixels that are equal to the local minimum
@@ -303,9 +383,9 @@ void MP::drawRect(Mat m) {
 	rectangle(m, area[i],
 			  Scalar(rand() % 235 + 20, rand() % 235 + 20, rand() % 235 + 20),
 			  FILLED);
-	imshow("map", m);
-	waitKey(0);
   }
+  //  imshow("rectmap", m);
+  //  waitKey(0);
   for (int i = 0; i < area.size() - 1; i++) {
 	Rect a = area[i];
 	for (int j = i + 1; j < area.size(); j++) {
@@ -316,16 +396,21 @@ void MP::drawRect(Mat m) {
 			  b.y + b.height > a.y ||
 		  a.y + a.height == b.y && a.x + a.width > b.x && b.x + b.width > a.x ||
 		  b.y + b.height == a.y && a.x + a.width > b.x && b.x + b.width > a.x) {
-		line(display, Point(a.x + a.width / 2, a.y + a.height / 2),
+		line(m, Point(a.x + a.width / 2, a.y + a.height / 2),
 			 Point(b.x + b.width / 2, b.y + b.height / 2), Scalar(255, 0, 0), 1,
 			 LINE_8);
 	  }
 	}
   }
-  imshow("map", m);
+  imshow("rectmap", m);
 }
 
-bool MP::largestArea(Rect const& a, Rect const& b) {
+bool MP::mostVision(const pair<Point, vector<Point>>& a,
+					const pair<Point, vector<Point>>& b) {
+  return (contourArea(a.second) > contourArea(b.second));
+}
+
+bool MP::largestArea(const Rect& a, const Rect& b) {
   return (a.area() > b.area());
 }
 
