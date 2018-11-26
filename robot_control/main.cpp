@@ -54,7 +54,7 @@ int main(int _argc, char **_argv) {
   // namedWindow("camera", WINDOW_FREERATIO);
 
   // initialise a MP object for localization
-  MP mp(mpp);
+  MP mp(mpp, "bigworld");
 
   // Create our node for communication
   gazebo::transport::NodePtr node(new gazebo::transport::Node());

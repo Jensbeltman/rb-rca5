@@ -8,8 +8,11 @@
 
 #include <line.h>
 #include <localizor.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <algorithm>
 #include <array>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -36,7 +39,9 @@ struct corner {
 
 class MP {
  public:
-  MP(Mat);
+  MP(Mat, string Name);
+
+  string name;
 
   void genVisMap(Mat bitmap, Mat dst, int scale);
   void cnrHeatC();
@@ -50,6 +55,10 @@ class MP {
   static bool largestArea(Rect const &a, Rect const &b);
   static bool mostVision(pair<Point, vector<Point>> const &a,
 						 pair<Point, vector<Point>> const &b);
+  bool doesMapExist(const std::string &filename);
+  void imwrite2(string s, Mat m);
+  bool imread2(string s, Mat &m);
+  float sumC1(Mat m);
 
   Localizor localizor;
   Mat bitmap;

@@ -1,6 +1,7 @@
 #include "mp.h"
 
-MP::MP(Mat bmap) {
+MP::MP(Mat bmap, string n) {
+  name = n;
   namedWindow("map", WINDOW_FREERATIO);
   namedWindow("rectmap", WINDOW_FREERATIO);
   namedWindow("testmap", WINDOW_FREERATIO);
@@ -24,9 +25,9 @@ MP::MP(Mat bmap) {
   findAreas(bitmap, area);
   drawRect(display2);
 
-  // cnrHeatC();
+  cnrHeatC();
   genVisMap(bitmap, visionMap, mScale);
-  //  genVisCnr();
+  // genVisCnr();
   // visionMap();
 
   localizor = Localizor(bitmap, cnrheatmap);
@@ -45,9 +46,6 @@ MP::MP(Mat bmap) {
 }
 
 void MP::genVisMap(Mat src, Mat vMap, int mapScale) {
-  resize(src, vMap, src.size() * mapScale, 0, 0, INTER_NEAREST);
-  vMap.convertTo(vMap, CV_32FC1);
-
   const int lineScale = 1;
 
   //  Mat lMap;
@@ -91,42 +89,50 @@ void MP::genVisMap(Mat src, Mat vMap, int mapScale) {
 	  }
 	}
   }
-
   float m2l = 1.0 / mapScale;
   float l2m = (float)mapScale / 1.0f;
 
-  float area = 0;
+  if (!imread2(name + "_vMap.png", vMap)) {
+	resize(src, vMap, src.size() * mapScale, 0, 0, INTER_NEAREST);
+	vMap.convertTo(vMap, CV_32FC1);
+	float area = 0;
 
-  for (int x = 0; x < vMap.cols; x += 1) {
-	cout << x << endl;
-	for (int y = 0; y < vMap.rows; y += 1) {
-	  area = 0;
-	  if (vMap.at<float>(y, x) != 0) {
-		float X = x + 0.5;
-		float Y = y + 0.5;
-		auto XY = vec2(X, Y);
-		vec2 XYS = XY * m2l;
-		vector<vec2> vision =
-			visibility_polygon(vector_type{XYS}, lines.begin(), lines.end());
+	for (int x = 0; x < vMap.cols; x += 1) {
+	  cout << x << endl;
+	  for (int y = 0; y < vMap.rows; y += 1) {
+		area = 0;
+		if (vMap.at<float>(y, x) != 0) {
+		  float X = x + 0.5;
+		  float Y = y + 0.5;
+		  auto XY = vec2(X, Y);
+		  vec2 XYS = XY * m2l;
+		  vector<vec2> vision =
+			  visibility_polygon(vector_type{XYS}, lines.begin(), lines.end());
 
-		for (uint i = 1; i < vision.size(); i++) {
-		  vec2 a{XYS - vision[i - 1]}, b{XYS - vision[i]};
+		  for (uint i = 1; i < vision.size(); i++) {
+			vec2 a{XYS - vision[i - 1]}, b{XYS - vision[i]};
+			area += abs(cross(a, b)) / 2;
+		  }
+		  vec2 a{XYS - vision[vision.size() - 1]}, b{XYS - vision[0]};
+
 		  area += abs(cross(a, b)) / 2;
+
+		  vMap.at<float>(y, x) = area;
 		}
-		vec2 a{XYS - vision[vision.size() - 1]}, b{XYS - vision[0]};
-
-		area += abs(cross(a, b)) / 2;
-
-		vMap.at<float>(y, x) = area;
 	  }
 	}
+	// cout << "channels" << vMap.channels();
+
+	Mat outImg;
+
+	// imshow("testmap", vMap);
+	normalize(vMap, vMap, 0, 1, NORM_MINMAX);
+
+	vMap.convertTo(vMap, CV_16U, 65535.0);
+
+	imwrite2(name + "_vMap.png", vMap);
   }
-  // cout << "channels" << vMap.channels();
 
-  Mat outImg;
-
-  // imshow("testmap", vMap);
-  normalize(vMap, vMap, 0, 1, NORM_MINMAX);
   localMaxima(vMap, mxVisPts, true);
   imshow("map", vMap);
 
@@ -149,9 +155,37 @@ void MP::genVisMap(Mat src, Mat vMap, int mapScale) {
   }
   sort(mxVisPoly.begin(), mxVisPoly.end(), &mostVision);
 
-  Mat temp = display.clone();
   float coverage = 0, temp_coverage = 0;
 
+  vector<Point> newPoints;
+  Mat vMask[mxVisPoly.size()];
+
+  for (int i = 0; i < mxVisPoly.size(); i++) {
+	vMask[i] = Mat::zeros(vMap.size(), CV_8UC1);
+	drawPoly2(vMask[i], mxVisPoly[i].second, Scalar(255));
+  }
+
+  Mat jointVis;
+  Mat tempVis = vMask[0].clone();
+  newPoints.push_back(mxVisPts[0]);
+  float bitMapSum = sumC1(bitmap);
+  float jsum;
+  for (int i = 1; i < mxVisPts.size(); i++) {
+	bitwise_and(tempVis, vMask[i], jointVis);
+	jsum = sumC1(jointVis) / sumC1(vMask[i]);
+	cout << jsum << endl;
+	if (jsum > 0.3) {
+	  drawPoly2(tempVis, mxVisPoly[i].second, Scalar(255));
+	}
+	coverage = 1.0 - bitMapSum / sumC1(tempVis);
+
+	imshow("testmap", jointVis);
+	imshow("testmap2", tempVis);
+	waitKey();
+  }
+
+  Mat temp = display.clone();
+  Mat temp2 = display.clone();
   cout << "The amount of maximas is: " << mxVisPoly.size() << endl;
   for (int i = 0; i < mxVisPoly.size(); i++) {
 	drawPoly2(temp, mxVisPoly[i].second, Scalar(200, 0, 0));
@@ -164,13 +198,13 @@ void MP::genVisMap(Mat src, Mat vMap, int mapScale) {
 	temp_coverage = b / (float)(temp.rows * temp.cols);
 
 	if ((temp_coverage - coverage) > 0.1) {
-	  drawPoly2(display, mxVisPoly[i].second, Scalar(200, 0, 0));
+	  drawPoly2(temp2, mxVisPoly[i].second, Scalar(200, 0, 0));
 	  coverage = temp_coverage;
 	} else
-	  temp = display.clone();
+	  temp = temp2.clone();
 
 	cout << "Point " << i << " coverage is " << setw(5) << coverage << endl;
-	imshow("testmap", display);
+	imshow("testmap", temp2);
 	waitKey();
   }
 }
@@ -241,7 +275,7 @@ void MP::genVisPoly() {}
 
 void MP::localMaxima(const Mat image, vector<Point>& pts,
 					 bool remove_plateaus) {
-  Mat mask(image.size(), CV_32FC1);
+  Mat mask(image.size(), CV_16U);
 
   // find pixels that are equal to the local neighborhood not maximum
   // (including 'plateaus')
@@ -304,8 +338,6 @@ void MP::findAreas(Mat map, vector<Rect>& A) {
 	  for (int x = 0; x < dx; x++) {
 		if ((isBlackBetween(map_t, c->P + Point(c->D.x * x, 0),
 							Point(0, c->D.y), ly))) {
-		  cout << x << "," << ly << endl;
-
 		  Point ul;
 		  if (c->D.x > 0) {
 			ul.x = c->P.x;
@@ -331,8 +363,6 @@ void MP::findAreas(Mat map, vector<Rect>& A) {
 	  for (int y = 0; y < dy; y++) {
 		if ((isBlackBetween(map_t, c->P + Point(0, c->D.y * y),
 							Point(c->D.x, 0), lx))) {
-		  cout << y << "," << lx << endl;
-
 		  Point ul;
 		  if (c->D.x > 0) {
 			ul.x = c->P.x;
@@ -408,6 +438,56 @@ void MP::drawRect(Mat m) {
 bool MP::mostVision(const pair<Point, vector<Point>>& a,
 					const pair<Point, vector<Point>>& b) {
   return (contourArea(a.second) > contourArea(b.second));
+}
+
+bool MP::doesMapExist(const std::string& filename) {
+  struct stat buffer;
+  return (stat(filename.c_str(), &buffer) == 0);
+}
+
+void MP::imwrite2(string s, Mat m) {
+  int result;
+  try {
+	result = imwrite(s, m);
+  } catch (const cv::Exception& ex) {
+	fprintf(stderr, "Exception converting image to PNG format: %s\n",
+			ex.what());
+  }
+  if (result)
+	printf("Saved PNG file with alpha data.\n");
+  else
+	printf("ERROR: Can't save PNG file.\n");
+}
+
+bool MP::imread2(string s, Mat& m) {
+  {
+	Mat result;
+
+	result = imread(s, IMREAD_ANYDEPTH);
+	cout << result.channels();
+	cout << "." << result.depth() << endl;
+
+	if (!result.data) {
+	  printf("Loading image  failed \n");
+	  return false;
+	} else {
+	  printf("Loading image succeded.\n");
+
+	  m = result.clone();
+	}
+
+	return true;
+  }
+}
+
+float MP::sumC1(Mat m) {
+  int sum = 0;
+  for (int x = 0; x < m.cols; x++) {
+	for (int y = 0; y < m.rows; y++) {
+	  sum += m.at<uchar>(y, x);
+	}
+  }
+  return (float)sum;
 }
 
 bool MP::largestArea(const Rect& a, const Rect& b) {
