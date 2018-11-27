@@ -29,12 +29,15 @@ class obstacle_avoidance : public fuzzy_control
 {
 public:
     void init_controller();
-    void setValues(float obstacleDist, float obstacleDir);
+    void setValues(float obstacleDist, float obstacleDir, float goalDist, float goalDir);
 
 private:
     //Inputvariables
     fl::InputVariable*  p_obstacleDist;
     fl::InputVariable*  p_obstacleDir;
+    //To Goal
+    fl::InputVariable*  p_goalDist;
+    fl::InputVariable*  p_goalAngle;
 };
 
 class take_marble : public fuzzy_control

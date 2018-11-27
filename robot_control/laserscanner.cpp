@@ -84,7 +84,7 @@ void testDraw(ConstLaserScanStampedPtr &msg,
 
     for (int i = 0; i < (int)startpoints.size(); i++) {
         cv::line(im, cv::Point(200+startpoints[i].first*px_per_m, 200-startpoints[i].second*px_per_m),
-                 cv::Point(200+endpoints[i].first*px_per_m, 200-endpoints[i].second*px_per_m), cv::Scalar(rand()%200, rand()%200, rand()%200), 2, cv::LINE_8);
+                 cv::Point(200+endpoints[i].first*px_per_m, 200-endpoints[i].second*px_per_m), cv::Scalar(0, 0, 150), 2, cv::LINE_8);
     }
 
     for (int i = 0; i < (int)closestP.size(); i++) {
@@ -94,6 +94,14 @@ void testDraw(ConstLaserScanStampedPtr &msg,
     }
     //cv::line(im, cv::Point(200+0*px_per_m, 200-0*px_per_m),
     //         cv::Point(200+1*px_per_m, 200-0*px_per_m), cv::Scalar(rand()%200, rand()%200, rand()%200), 2, cv::LINE_8);
+
+
+    //int saveImage = cv::waitKey(0);
+    //if (saveImage == 'i') {
+    //    std::vector<int> comp_param;
+    //    comp_param.push_back(CV_IMWRITE_PNG_COMPRESSION);
+    //    cv::imwrite("ransacLines.png", im, comp_param);
+    //}
 
     mutex.lock();
     cv::imshow("Lidar", im);
@@ -275,7 +283,7 @@ void laserscanner::findLines(ConstLaserScanStampedPtr &msg)
         shortestLineAngle = 0;
     }
     shortestLineLength = sqrt(shortestLineLength);
-    std::cout << "Length: " << shortestLineLength << " Angle: " << shortestLineAngle << std::endl;
+    //std::cout << "Length: " << shortestLineLength << " Angle: " << shortestLineAngle << std::endl;
 
     testDraw(msg, regressionStart, regressionEnd, closestPoints);
 }

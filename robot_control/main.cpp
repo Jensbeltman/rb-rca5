@@ -14,9 +14,12 @@ using namespace cv;
 #include "fuzzy_control.h"
 #include "circledetect.h"
 #include "laserscanner.h"
+#include "movetopoint.h"
 
 static boost::mutex mutex;
 
+
+MoveToPoint testGoal;
 
 //bool marblePresent = false;
 bool allBlue = false;
@@ -38,6 +41,8 @@ void trackRobot(ConstPosesStampedPtr &msg) {
         }
     }
     doubleMap.at<Vec3b>(init_y + y , init_x + x) = {0, 0, 150};
+
+    //doubleMap.at<Vec3b>(50, 20) = {0, 0, 200};
 
     //cv::namedWindow("MapTracking", cv::WINDOW_FREERATIO);
 
@@ -178,10 +183,45 @@ void lidarCallback(ConstLaserScanStampedPtr &msg) {
 }
 */
 
+int delay = 0;
+int counter = 1;
+void makeDataset(ConstImageStampedPtr &msg) {
+    std::size_t width = msg->image().width();
+    std::size_t height = msg->image().height();
+    const char *data = msg->image().data().c_str();
+    cv::Mat im(int(height), int(width), CV_8UC3, const_cast<char *>(data));
+
+    cv::cvtColor(im, im, CV_RGB2BGR);
+
+    circleDetect getBlue;
+
+    int blue = getBlue.getAmountBlue(im);
+    //std::cout << blue << std::endl;
+    if (blue > 10) {
+        if (delay < 7) {
+            delay++;
+        } else {
+            std::string imgName = "../automatedImages/imgset13_"+std::to_string(counter)+".png";
+            std::vector<int> comp_param;
+            comp_param.push_back(CV_IMWRITE_PNG_COMPRESSION);
+            cv::imwrite(imgName, im, comp_param);
+            delay = 0;
+            std::cout << counter++ << std::endl;
+        }
+    }
+
+
+
+    cv::namedWindow("test", WINDOW_AUTOSIZE);
+    cv::imshow("test", im);
+}
+
 int main(int _argc, char **_argv) {
 
     laserscanner scanner;
     circleDetect circDetect;
+
+    testGoal.setGoal(90, 30);
 
 
   // Load gazebo
@@ -195,8 +235,14 @@ int main(int _argc, char **_argv) {
   //gazebo::transport::SubscriberPtr statSubscriber =
   //    node->Subscribe("~/world_stats", statCallback);
 
-  gazebo::transport::SubscriberPtr poseSubscriber =
-      node->Subscribe("~/pose/info", trackRobot);//poseCallback, trackRobot);
+  //gazebo::transport::SubscriberPtr poseSubscriber =
+  //    node->Subscribe("~/pose/info", trackRobot);//poseCallback, trackRobot);
+
+  gazebo::transport::SubscriberPtr toPoint =
+          node->Subscribe("~/pose/info", &MoveToPoint::displayGoal, &testGoal);
+
+  gazebo::transport::SubscriberPtr setPos =
+          node->Subscribe("~/pose/info", &MoveToPoint::setPosition, &testGoal);
 
   //gazebo::transport::SubscriberPtr cameraSubscriber =
   //    node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
@@ -212,6 +258,9 @@ int main(int _argc, char **_argv) {
 
   gazebo::transport::SubscriberPtr laserScanRansac =
           node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &laserscanner::findLines, &scanner);
+
+  gazebo::transport::SubscriberPtr dataset =
+          node->Subscribe("~/pioneer2dx/camera/link/camera/image", makeDataset);
 
 
   // Publish to the robot vel_cmd topic
@@ -258,6 +307,11 @@ int main(int _argc, char **_argv) {
     if (key == key_esc)
       break;
 
+
+    testGoal.leftToGoal();
+    //std::cout << "Length: " << testGoal.leftToGoal().distance << " Angle: " << testGoal.leftToGoal().angle << std::endl;
+
+
     //Determine if a marble is present.
     /*
     if (marbleDist) {
@@ -276,9 +330,10 @@ int main(int _argc, char **_argv) {
         //std::cout << "No AI" << std::endl;
     } else {
     */
+
         //Set value Odir from getClosestDir and set value Odist from getClosestDist
         //controller.setValues(scanner.getClosestScan().distance, scanner.getClosestScan().direction);
-        controller.setValues(scanner.getClosestLine().distance, scanner.getClosestLine().angle);
+        controller.setValues(scanner.getClosestLine().distance, scanner.getClosestLine().angle, testGoal.leftToGoal().distance, testGoal.leftToGoal().angle);
 
         //Engine process here.
         controller.process();
@@ -289,11 +344,14 @@ int main(int _argc, char **_argv) {
         //Steer direction = get value from Sdir
         dir = controller.getValues().direction;
 
+        //std::cout << "Speed: " << speed1 << " Dir: " << dir1 << std::endl;
+        //std::cout << "Dist: " << scanner.getClosestLine().distance << " Dir: " << scanner.getClosestLine().angle << std::endl;
+
         //std::cout << "No marble" << std::endl;
     //}
 
 
-/*
+
     if ((key == key_up) && (speed <= 1.2f))
       speed += 0.05;
     else if ((key == key_down) && (speed >= -1.2f))
@@ -307,7 +365,7 @@ int main(int _argc, char **_argv) {
       //      speed *= 0.1;
       //      dir *= 0.1;
     }
-*/
+
 
 
     // Generate a pose

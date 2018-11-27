@@ -56,7 +56,7 @@ void circleDetect::detect(ConstImageStampedPtr &msg)
     circle(binSat, cv::Point(center_x, center_y), 2, cv::Scalar(150), -1, 8, 0);
 
 
-    cv::imshow("", im);
+    //cv::imshow("", im);
 }
 
 int circleDetect::search(cv::Mat & in_img)
@@ -141,8 +141,8 @@ int circleDetect::getAmountBlue(cv::Mat img)
     int channels[] = {0};
     const float *p_ranges[] = {ranges};
     cv::calcHist(&hlsImg, 1, channels, cv::Mat(), histhalloj, 1, histsize, p_ranges, true);
-    cv::imshow("", hlsCh[0]);
-    std::cout << "Hej " << histhalloj << std::endl;
+    //cv::imshow("", hlsCh[0]);
+    //std::cout << "Hej " << histhalloj << std::endl;
 
     int histogram[256] = {0};
     for (int i = 0; i < hlsImg.rows; i++) {
@@ -163,6 +163,7 @@ int circleDetect::getAmountBlue(cv::Mat img)
         avg_blue += histogram[i];
     }
     //std::cout << avg_blue/10 << std::endl;
-    //cv::imshow("", flip);
+    cv::namedWindow("Histogram", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Histogram", flip);
     return avg_blue/10;
 }

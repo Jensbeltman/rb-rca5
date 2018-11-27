@@ -56,14 +56,16 @@ SOURCES       = ../robot_control/main.cpp \
 		../robot_control/circledetect.cpp \
 		../robot_control/fuzzy2.cpp \
 		../robot_control/fuzzy_control.cpp \
-		../robot_control/laserscanner.cpp 
+		../robot_control/laserscanner.cpp \
+		../robot_control/movetopoint.cpp 
 OBJECTS       = main.o \
 		fuzzy1.o \
 		buffer.o \
 		circledetect.o \
 		fuzzy2.o \
 		fuzzy_control.o \
-		laserscanner.o
+		laserscanner.o \
+		movetopoint.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -138,13 +140,15 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		circledetect.h \
 		fuzzy2.h \
 		fuzzy_control.h \
-		laserscanner.h ../robot_control/main.cpp \
+		laserscanner.h \
+		movetopoint.h ../robot_control/main.cpp \
 		../robot_control/fuzzy1.cpp \
 		../robot_control/buffer.cpp \
 		../robot_control/circledetect.cpp \
 		../robot_control/fuzzy2.cpp \
 		../robot_control/fuzzy_control.cpp \
-		../robot_control/laserscanner.cpp
+		../robot_control/laserscanner.cpp \
+		../robot_control/movetopoint.cpp
 QMAKE_TARGET  = robot_control
 DESTDIR       = 
 TARGET        = robot_control
@@ -452,7 +456,8 @@ main.o: ../robot_control/main.cpp ../robot_control/fuzzy_control.h \
 		../../../Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/fl/variable/OutputVariable.h \
 		../robot_control/circledetect.h \
 		../robot_control/buffer.h \
-		../robot_control/laserscanner.h
+		../robot_control/laserscanner.h \
+		../robot_control/movetopoint.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../robot_control/main.cpp
 
 fuzzy1.o: ../robot_control/fuzzy1.cpp ../robot_control/fuzzy1.h \
@@ -800,6 +805,9 @@ fuzzy_control.o: ../robot_control/fuzzy_control.cpp ../robot_control/fuzzy_contr
 
 laserscanner.o: ../robot_control/laserscanner.cpp ../robot_control/laserscanner.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o laserscanner.o ../robot_control/laserscanner.cpp
+
+movetopoint.o: ../robot_control/movetopoint.cpp ../robot_control/movetopoint.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o movetopoint.o ../robot_control/movetopoint.cpp
 
 ####### Install
 

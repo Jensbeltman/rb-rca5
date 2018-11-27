@@ -1,0 +1,44 @@
+
+!!!NOTICE!!!
+All images in a dataset must have at least one circle registered in it for the main program to not go out of sync.
+
+1.
+Place a number of images with any names (ending in .png) in the directory "datasets/buildDataset/".
+
+2.
+From within the directory "buildDataset" first run the script "rename_img.sh".
+
+3.
+Compile and run the main program from the "root" directory (the directory this file is in).
+
+4.
+Choose the option to build a dataset.
+
+5.
+After the first image is loaded it is required to press "space" (or any other key) to be able to proceed.
+
+6.
+Now click on the centrum of a circle in the image and then on the perimeter.
+
+7.
+    a - If satisfied with the circle press "s" to save the parameters.
+    b - If not satisfied with the circle press "r" to retry.
+
+When all circles in the image have been saved press "n" to go to the next image.
+
+- Notice -
+It is required to press "r" to redo a selection to avoid saving multiple circles if the next one is saved.
+If "n" is pressed without saving any circles on the image the dataset will have to be redone!
+
+8.
+Go back to the directory "datasets/buildDataset/" and run the script "setDone.sh" with a number as parameter.
+This number will serve as index for the folder that will be created in the directory "datasets".
+The script "setDone.sh" will move all the images into the folder with the index chosen.
+
+9.
+If multiple datasets are being created repeat from step 1.
+
+10.
+Go back to the "root" directory (the directory with the main program and this file).
+Run the main program and choose the option to run the test.
+After running the weighted parameters will be placed in a file named "parameters.txt" in the same directory as the main program.

@@ -9,7 +9,8 @@ SOURCES += main.cpp \
     circledetect.cpp \
     fuzzy2.cpp \
     fuzzy_control.cpp \
-    laserscanner.cpp
+    laserscanner.cpp \
+    movetopoint.cpp
 
 CONFIG += link_pkgconfig
 PKGCONFIG += gazebo
@@ -21,7 +22,8 @@ HEADERS += \
     circledetect.h \
     fuzzy2.h \
     fuzzy_control.h \
-    laserscanner.h
+    laserscanner.h \
+    movetopoint.h
 
 INCLUDEPATH += /home/bjarke/Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/
 
