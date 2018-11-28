@@ -6,7 +6,7 @@
 
 MoveToPoint::MoveToPoint()
 {
-
+    std::cout << std::fixed;
 }
 
 void MoveToPoint::setGoal(float x, float y)
@@ -29,9 +29,22 @@ distAndAngle MoveToPoint::leftToGoal()
     distAndAngle output;
 
     output.distance = sqrt(pow(goal.first-position.first, 2)+pow(goal.second-position.second, 2));
-    output.angle = atan2(goal.second-position.second, goal.first-position.first) - orientation;
+    //output.angle = atan2(goal.second-position.second, goal.first-position.first) - orientation;
 
-    //std::cout << "Distance: " << output.distance << " angle: " << output.angle << std::endl;
+    float egern = fmod(2*M_PI - atan2(goal.second-position.second, goal.first-position.first),2 * M_PI);
+
+    std::cout << std::setw(10) << std::setprecision(3) << egern - orientation << "|";
+
+    if(egern - orientation > M_PI){
+        egern -= 2*M_PI;
+    }else if(egern - orientation < -M_PI){
+        egern += 2*M_PI;
+    }
+
+    output.angle = egern;
+    //std::cout << "Distance: " << output.distance << " angle: " << output.angle << " orientation: " << orientation << std::endl;
+    std::cout << std::setw(10) << std::setprecision(3) << orientation << std::setw(10) << std::setprecision(3) << egern << std::setw(10) << std::setprecision(3) << egern - orientation << std::endl;
+
 
     return output;
 }
@@ -42,10 +55,11 @@ void MoveToPoint::setPosition(ConstPosesStampedPtr &msg)
         if (msg->pose(i).name() == "pioneer2dx") {
             position.first = msg->pose(i).position().x()*72/25.4*0.5 + 60;
             position.second = -1*msg->pose(i).position().y()*72/25.4*0.5 + 40;
-            orientation = -M_PI+2*atan2(msg->pose(i).orientation().w(), msg->pose(i).orientation().z());
+            orientation = fmod(3*M_PI - 2 * atan2(msg->pose(i).orientation().w(), msg->pose(i).orientation().z()), 2*M_PI);
         }
     }
     //std::cout << "x: " << position.first << " y: " << position.second << std::endl;
+
 }
 
 void MoveToPoint::displayGoal(ConstPosesStampedPtr &msg)
@@ -69,6 +83,6 @@ void MoveToPoint::displayGoal(ConstPosesStampedPtr &msg)
     _map.at<cv::Vec3b>(goal.second, goal.first) = {0, 0, 200};
     cv::line(_map, cv::Point(init_x + x, init_y + y), cv::Point(goal.first, goal.second), cv::Scalar(200, 0, 0), 1, cv::LINE_8);
 
-    //cv::namedWindow("Map", cv::WINDOW_FREERATIO);
-    //cv::imshow("Map", _map);
+    cv::namedWindow("Map", cv::WINDOW_FREERATIO);
+    cv::imshow("Map", _map);
 }

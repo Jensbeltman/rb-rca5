@@ -56,7 +56,7 @@ void circleDetect::detect(ConstImageStampedPtr &msg)
     circle(binSat, cv::Point(center_x, center_y), 2, cv::Scalar(150), -1, 8, 0);
 
 
-    //cv::imshow("", im);
+    cv::imshow("", im);
 }
 
 int circleDetect::search(cv::Mat & in_img)

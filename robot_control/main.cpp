@@ -259,8 +259,8 @@ int main(int _argc, char **_argv) {
   gazebo::transport::SubscriberPtr laserScanRansac =
           node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &laserscanner::findLines, &scanner);
 
-  gazebo::transport::SubscriberPtr dataset =
-          node->Subscribe("~/pioneer2dx/camera/link/camera/image", makeDataset);
+  //gazebo::transport::SubscriberPtr dataset =
+  //        node->Subscribe("~/pioneer2dx/camera/link/camera/image", makeDataset);
 
 
   // Publish to the robot vel_cmd topic
