@@ -42,63 +42,69 @@ class MP {
   MP(Mat, string Name);
 
   string name;
-
-  void genVisMap(Mat bitmap, Mat dst, int scale);
-  void cnrHeatC();
-  // void visionMap();//too heavy
-
-  void localPoseCallback(ConstPosesStampedPtr &_msg);
-  void poseCallback(ConstPosesStampedPtr &_msg);
-  void findAreas(Mat bitmap, vector<Rect> &area);
-  bool isBlackBetween(Mat image, Point a, Point d, int l);
-  void drawRect(Mat m);
-  static bool largestArea(Rect const &a, Rect const &b);
+  // -------------VisionMap Main functions------------------------
+  void genVisMap(Mat bitmap, Mat &vMap, vector<segment_type> &lines, int scale);
+  void genVisPoints(Mat bitmap, Mat &vMap, vector<segment_type> &lines,
+					vector<Point> &pts,
+					vector<pair<Point, vector<Point>>> &visPoly,
+					float coverage);
+  void genVisPoly(vector<segment_type> &lines, vector<Point> &pts,
+				  vector<pair<Point, vector<Point>>> &visPoly);
+  // visionMap helper functions
+  void removeCnr(corner c, vector<corner> &cnrs);
   static bool mostVision(pair<Point, vector<Point>> const &a,
 						 pair<Point, vector<Point>> const &b);
-  bool doesMapExist(const std::string &filename);
+  corner nextCorner(corner cc, vector<corner> cnrs, bool x);
+
+  Point cnr2pos(corner c);
+
+  //----------------- Corners ---------------------------------------
+  int findCorners(Mat m, vector<corner> &);
+  void drawCorners();
+  void cnrHeatC();
+
+  // ------------------Rectangles -----------------------------
+  void findAreas(Mat bitmap, vector<Rect> &area);
+  void drawRect(Mat m);
+  static bool largestArea(Rect const &a, Rect const &b);
+
+  // general helper functions
   void imwrite2(string s, Mat m);
-  bool imread2(string s, Mat &m);
+  void localMaxima(const Mat image, vector<Point> &maximas, bool, int kx,
+				   int ky);
+  void drawPoly2(Mat image, vector<Point> &polygon, Scalar color);
   float sumC1(Mat m);
+  bool imread2(string s, Mat &m);
+  bool isBlackBetween(Mat image, Point a, Point d, int l);
 
   Localizor localizor;
+
+  // Mats
   Mat bitmap;
   Mat cnrheatmap;
   Mat visionMap;
   Rect bitmapRect;
-
- private:
-  corner nextCorner(corner cc, vector<corner> cnrs, bool x);
-  void removeCnr(corner c, vector<corner> &cnrs);
-  Point cnr2pos(corner c);
-  void genVisPoly();
-  void localMaxima(const Mat image, vector<Point> &maximas, bool);
-  void drawPoly2(Mat image, vector<Point> &polygon, Scalar color);
-
-  vector<corner *> **visCnr;
-
-  int findCorners(Mat m, vector<corner> &);
-  void drawCorners();
-
-  vector<corner> cnr;
-  vector<corner> cnrV;
-  vector<Rect> area;
-  vector<Point> mxVisPts;
-  vector<pair<Point, vector<Point>>> mxVisPoly;
-
-  int vMapScale;
-
   Mat display;
   Mat display2;
   Mat cornerkernel;
+
+  // gazebo
+  void localPoseCallback(ConstPosesStampedPtr &_msg);
+  void poseCallback(ConstPosesStampedPtr &_msg);
+
+ private:
+  int vMapScale;
+  vector<corner> cnr;
+  vector<Rect> area;
+  vector<Point> mxVisPts;
+  vector<segment_type> lines;
+  vector<pair<Point, vector<Point>>> mxVisPoly;
+
   // Gazebo setup
   gazebo::transport::NodePtr node;
   gazebo::transport::SubscriberPtr poseSubscriber;
   gazebo::transport::SubscriberPtr localPoseSubscriber;
   gazebo::transport::SubscriberPtr lidarSubscriber;
-
-  //	vector<Mat> mask;
-
-  //	vector<corner> cnr;
 };
 
 #endif  // MP_H

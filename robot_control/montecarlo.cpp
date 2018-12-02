@@ -39,7 +39,7 @@ void Montecarlo::reDistribute(Point2f p, float d) {
   tdir = d;
 
   for (int i = 0; i < nEst; i++) {
-    rConf[i].dir = tdir  + 0.01 * dist(generator);
+	rConf[i].dir = tdir + 0.01 * dist(generator);
     rConf[i].pos.x = tpos.x + dist(generator);
     rConf[i].pos.y = tpos.y + dist(generator);
   }
@@ -48,21 +48,20 @@ void Montecarlo::reDistribute(Point2f p, float d) {
 void Montecarlo::setConf(Point2f p, float d, bool override) {
   pos = p;
   dir = d;
-  if(override){
-      tpos = p;
-      tdir = d;
+  if (override) {
+	tpos = p;
+	tdir = d;
   }
 }
 
 Point2f Montecarlo::getBestPos() {
-  Point2f tp(0,0);
-  int n = nEst/4;
-  for(int i = 0; i < n; i++){
-      tp += rConf[0].pos;
+  Point2f tp(0, 0);
+  int n = nEst / 4;
+  for (int i = 0; i < n; i++) {
+	tp += rConf[0].pos;
   }
-  tp /= (float) n;
-  return Point2f((tp.x - map.cols / 2) / 4,
-                 -(tp.y - map.rows / 2) / 4);
+  tp /= (float)n;
+  return Point2f((tp.x - map.cols / 2) / 4, -(tp.y - map.rows / 2) / 4);
 }
 
 double Montecarlo::getBestDir() { return rConf[0].dir; }
@@ -87,7 +86,7 @@ void Montecarlo::show() {
   // imshow("Map Lidar",
   // laserScanner.visualizeScan(laserScanner.generateScan(map, pos, dir)));
 
-  imshow("Map", m);
+  imshow("map", m);
 }
 
 Mat *Montecarlo::getMap() { return &map; }

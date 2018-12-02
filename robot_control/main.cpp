@@ -31,30 +31,23 @@ void cameraCallback(ConstImageStampedPtr &msg) {
 }
 
 int main(int _argc, char **_argv) {
-  //  vector<Line> lines;
-  //  lines.push_back(Line(Point2f(0, 7), Point2f(5, 5)));
-  //  lines.push_back(Line(Point2f(2, 9), Point2f(4, 5)));
-  //  lines.push_back(Line(Point2f(-1, 5), Point2f(1, 3)));
-  //  lines.push_back(Line(Point2f(2, 6), Point2f(4, 12)));
-  //  lines.push_back(Line(Point2f(-1, -1), Point2f(1, -1)));
-
-  //  Line l(Point2f(0, 0), Point2f(3, 9));
-  //  cout << l.p1 << l.p2 << endl;
-  //  l.nearestIntersection(lines);
-
-  //  cout << l.p1 << l.p2 << endl;
-
-  //  waitKey();
-
-  cv::Mat mpp =
+  cv::Mat mpp1 =
 	  imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
+  cv::Mat mpp2 =
+	  imread("../models/smallworld/meshes/floor_plan.png", IMREAD_COLOR);
+  cv::Mat mpp3 =
+	  imread("../models/testworld/meshes/floor_plan.png", IMREAD_COLOR);
 
   // Load gazebo
   gazebo::client::setup(_argc, _argv);
   // namedWindow("camera", WINDOW_FREERATIO);
 
   // initialise a MP object for localization
-  MP mp(mpp, "bigworld");
+  MP mp1(mpp1, "bigworld");
+  waitKey();
+  MP mp2(mpp2, "smallworld");
+  waitKey();
+  MP mp3(mpp3, "testworld");
 
   // Create our node for communication
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
@@ -87,9 +80,8 @@ int main(int _argc, char **_argv) {
 
   // Loop
   while (true) {
-	//	mp.drawMap();
-	//	mp.localizor.printPose();
-	//	mp.localizor.montecarlo.show();
+	mp1.localizor.printPose();
+	mp1.localizor.montecarlo.show();
 
 	gazebo::common::Time::MSleep(10);
 
