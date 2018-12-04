@@ -56,7 +56,7 @@ void Montecarlo::setConf(Point2f p, float d, bool override) {
 
 Point2f Montecarlo::getBestPos() {
   Point2f tp(0,0);
-  int n = nEst/4;
+  int n = nEst/8;
   for(int i = 0; i < n; i++){
       tp += rConf[0].pos;
   }
@@ -109,7 +109,7 @@ void Montecarlo::localize(LaserScan *ls) {
   std::default_random_engine gen;
   std::normal_distribution<double> dist(0.0, nEst * 0.3);
 
-  std::array<Robconf, 40> newrConf;
+  std::array<Robconf, 80> newrConf;
 
   Point2f dpos = pos - tpos;
   float ddir = dir - tdir;
@@ -120,7 +120,7 @@ void Montecarlo::localize(LaserScan *ls) {
 
   for (int i = 0; i < nEst; i++) {
 	int sel = std::abs(dist(gen));
-	// if (sel >= nEst) sel = nEst - 1;
+    if (sel >= nEst) sel = nEst - 1;
 	float ndir = rConf[sel].dir + ddir * distribution(generator);
 	newrConf[i].dir = ndir;
 	newrConf[i].pos.x =

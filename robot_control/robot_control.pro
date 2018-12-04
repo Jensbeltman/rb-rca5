@@ -7,7 +7,8 @@ SOURCES += main.cpp \
     localizor.cpp \
     laserscanner.cpp \
     mp.cpp \
-    montecarlo.cpp
+    montecarlo.cpp \
+    mclocalizer.cpp
 
 CONFIG += link_pkgconfig
 PKGCONFIG += gazebo
@@ -19,4 +20,5 @@ HEADERS += \
     localizor.h \
     laserscanner.h \
     mp.h \
-    montecarlo.h
+    montecarlo.h \
+    mclocalizer.h

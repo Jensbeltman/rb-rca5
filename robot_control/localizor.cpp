@@ -30,9 +30,9 @@ void Localizor::poseCallback(ConstPosesStampedPtr &_msg) {
 }
 
 void Localizor::printPose() {
-  cout << fixed << "X: " << setw(5) << x << ", Y: " << setw(5) << y
-	   << ", phi: " << setw(5) << phi << "error: " << setw(5) << rx - x << ", "
-	   << setw(5) << ry - y << endl;
+  cout << fixed << "X: " << setw(5) << setprecision(2) << x << " Y: " << setw(5) << setprecision(2) << y
+       << " p: " << setw(5) << setprecision(2) << phi << " e: " << setw(5) << setprecision(2) << rx - x << "  "
+       << setw(5) << setprecision(2) << ry - y << endl;
 }
 
 double Localizor::getX() { return mx; }
@@ -45,6 +45,11 @@ bool Localizor::cnrInrange(int threshold) {
 
   return false;
 }
+int test_ittr = 0;
+float test_x = 0;
+float test_y = 0;
+float test_phi = 0;
+
 void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
   // cout << "test" << endl;
 
@@ -57,8 +62,8 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
 	  double nqw = qw * 0.5 - qx * 0.5 - qy * 0.5 - qz * 0.5;
 	  double nqy = qw * 0.5 - qx * 0.5 + qy * 0.5 + qz * 0.5;
 
-	  if (fabs(rw - qw) > 0.02) first = true;
-	  rw = qw;
+      //if (fabs(rw - qw) > 0.02) first = true;
+      //rw = qw;
 
 	  p_r = M_PI + atan2(nqw, nqy);
 	  // cout << fixed << setw(4) << p_r << endl;
@@ -71,49 +76,22 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
 	  double nqw = qw * 0.5 - qx * 0.5 - qy * 0.5 - qz * 0.5;
 	  double nqy = qw * 0.5 - qx * 0.5 + qy * 0.5 + qz * 0.5;
 
-	  if (fabs(lw - qw) > 0.02) first = true;
-	  lw = qw;
+      //if (fabs(lw - qw) > 0.02) first = true;
+      //lw = qw;
 
 	  p_l = M_PI + atan2(nqw, nqy);
 	}
   }
-  if(cnrInrange(100))
-  {
-      nmcA = 80;
-  }else{
-      nmcA = max(0, nmcA - 1);
-  }
-  if (nmcA > 0) {
-    if(!mcActive) {
-        mcActive = true;
-        montecarlo.reDistribute(Point2f(mx*4,my*4),phi);
-    }else{
-        if(nMonte++ >= 0){
-            tx += P2G * montecarlo.getBestPos().x;
-            ty += P2G * montecarlo.getBestPos().y;
-            tphi += montecarlo.getBestDir();
-        }
-        if(nMonte >= 20){
-            nMonte = -40;
-            x = tx/20.;
-            y = ty/20.;
-            phi = tphi/20.;
-            tx = 0;
-            ty = 0;
-            tphi = 0;
-            mx = x * G2P + bitmap.cols / 2;
-            my = -y * G2P + bitmap.rows / 2;
-            //montecarlo.reDistribute(Point2f(mx*4,my*4),phi); // enten eller :
-            montecarlo.setConf(Point2f(4 * mx, 4 * my), (float)phi, true);
-        }
-    }
-  }else{
-      mcActive = false;
-      nMonte = -40;
-  }
 
-  if (!first) {
-	t = _msg->time().sec() + 0.000000001 * _msg->time().nsec();
+  t = _msg->time().sec() + 0.000000001 * _msg->time().nsec();
+
+  if (first) {
+      prev_p_l = p_l;
+      prev_p_r = p_r;
+      prev_t = t;
+      first = false;
+      return;
+  }
 
 	dp_l = p_l - prev_p_l;
 	dp_r = p_r - prev_p_r;
@@ -136,19 +114,11 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
 	v_l = dp_l / dt;
 	v_r = dp_r / dt;
 
-	//	cout << fixed << setprecision(6) << "pl: " << setw(4) <<
-	// prev_pitch_l
-	//		   << " | pr: " << setw(4) << prev_pitch_r << " ||   vl:
-	//" <<
-	// setw(4)
-	//<< 	 vel_l
-	//		   << " ||   vr: " << setw(4) << vel_r << endl;
-
 	prev_p_l = p_l;
 	prev_p_r = p_r;
 	prev_t = t;
 
-    const double l = 0.34;// + 0.05;
+    const double l = 0.34 + 0.05;
 	double R, omega;
 
     double dpx = 0;
@@ -156,21 +126,19 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
 	double dphi = 0;
 	double ICC_x, ICC_y;
 
-	double vl = v_l * (0.11 * 2);
-	double vr = v_r * (0.11 * 2);
+    double vl = v_l * (0.12 * 2);
+    double vr = v_r * (0.12 * 2);
 
 	R = (l / 2) * (vl + vr) / (vr - vl);
 	omega = (vr - vl) / l;
 
 	dphi = omega * dt + phi;
 
-	ICC_x = x - R * sin(phi);
-	ICC_y = y - R * cos(phi);
+    ICC_x = x - R * sin(phi); //0
+    ICC_y = y - R * cos(phi); //-R
 
-	dpx =
-		(cos(omega * dt) * (x - ICC_x) - sin(omega * dt) * (y - ICC_y)) + ICC_x;
-	dpy =
-		(sin(omega * dt) * (x - ICC_x) + cos(omega * dt) * (y - ICC_y)) + ICC_y;
+    dpx = (cos(omega * dt) * (x - ICC_x) - sin(omega * dt) * (y - ICC_y)) + ICC_x;
+    dpy = (sin(omega * dt) * (x - ICC_x) + cos(omega * dt) * (y - ICC_y)) + ICC_y;
 
 	x = dpx;
 	y = dpy;
@@ -179,19 +147,37 @@ void Localizor::localPoseCallback(ConstPosesStampedPtr &_msg) {
 	mx = x * G2P + bitmap.cols / 2;
 	my = -y * G2P + bitmap.rows / 2;
 
+    float ndphi = dt * omega;
+
+    float ndx = -sin(ndphi)*R;
+    float ndy =  cos(ndphi)*R - R;
+
+    test_x += ndx*cos(test_phi) + ndy*sin(test_phi);
+    test_y += ndx*sin(test_phi) + ndy*cos(test_phi);
+    test_phi += ndphi;
+
+    if(++test_ittr == 50){
+
+        Mat test(200,200,CV_8UC3);
+
+        test.setTo(255);
+
+        Point arrow_end1(100 + 200*test_x,100 + 200*test_y);   
+        Point arrow_end2(100 + 50*cos(test_phi), 100 + 50*sin(test_phi));
+
+        arrowedLine(test,Point(100,100),arrow_end1,Scalar(0,0,255),1,8,0,0.1);
+        arrowedLine(test,Point(100,100),arrow_end2,Scalar(255,0,0),1,8,0,0.1);
+
+        imshow("test 1", test);
+
+        test_x = 0;
+        test_y = 0;
+        test_phi = 0;
+        test_ittr = 0;
+
+    }
 	montecarlo.setConf(Point2f(4 * mx, 4 * my), (float)phi);
 
-	//	cout << fixed << "X: " << setw(5) << x << ",
-	// Ymontecarlo.pos.x=dpx;: "
-	//<< setw(5) << y
-	//		 << ", phi: " << setw(5) << dphi << setw(5) << lw <<
-	// setw(5) <<
-	// rw
-	//		 << endl;
-  } else {
-	prev_p_l = p_l;
-	prev_p_r = p_r;
-	prev_t = t;
-	first = false;
-  }
+
+
 }

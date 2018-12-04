@@ -45,10 +45,10 @@ class Montecarlo {
 
   std::default_random_engine generator;
   std::normal_distribution<float> distribution =
-	  std::normal_distribution<float>(1.0, 4);
+      std::normal_distribution<float>(1.0, 0.1);
 
-  int nEst = 40;
-  Robconf rConf[40];
+  int nEst = 80;
+  Robconf rConf[80];
   float calcScore(Robconf rc, LaserScan *ls);
 };
 
