@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_QML_DEBUG
 CFLAGS        = -pipe -g -std=c++11 -std=c++14 -pthread -std=c++11 -std=c++14 -pthread -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -std=c++11 -std=c++14 -pthread -std=c++11 -std=c++14 -pthread -Wall -W -fPIC $(DEFINES)
-INCPATH       = -I../robot_control -I. -isystem /usr/include/gazebo-9 -isystem /usr/include/sdformat-6.0 -isystem /usr/include/ignition/transport4 -isystem /usr/include/ignition/msgs1 -isystem /usr/include/ignition/fuel_tools1 -isystem /usr/include/x86_64-linux-gnu -I/usr/lib/x86_64-linux-gnu/libzip/include -isystem /usr/include/ignition/common1 -isystem /usr/include/ignition/math4 -isystem /usr/include/uuid -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -isystem /usr/local/include/opencv -isystem /usr/local/include -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
+INCPATH       = -I../robot_control -I. -isystem /usr/include/gazebo-9 -isystem /usr/include/sdformat-6.1 -isystem /usr/include/ignition/transport4 -isystem /usr/include/ignition/msgs1 -isystem /usr/include/ignition/fuel_tools1 -isystem /usr/include/x86_64-linux-gnu -I/usr/lib/x86_64-linux-gnu/libzip/include -isystem /usr/include/ignition/common1 -isystem /usr/include/ignition/math4 -isystem /usr/include/uuid -isystem /usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -isystem /usr/local/include/opencv -isystem /usr/local/include -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -50,8 +50,10 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../robot_control/main.cpp 
-OBJECTS       = main.o
+SOURCES       = ../robot_control/main.cpp \
+		../robot_control/marbleutility.cpp 
+OBJECTS       = main.o \
+		marbleutility.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/unix.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/common/linux.conf \
@@ -110,6 +112,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
+		../robot_control/.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -124,7 +127,8 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/lex.prf \
-		../robot_control/robot_control.pro  ../robot_control/main.cpp
+		../robot_control/robot_control.pro marbleutility.h ../robot_control/main.cpp \
+		../robot_control/marbleutility.cpp
 QMAKE_TARGET  = robot_control
 DESTDIR       = 
 TARGET        = robot_control
@@ -194,6 +198,7 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -268,6 +273,7 @@ Makefile: ../robot_control/robot_control.pro /usr/lib/x86_64-linux-gnu/qt5/mkspe
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf:
+.qmake.stash:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf:
@@ -326,8 +332,11 @@ compiler_clean:
 
 ####### Compile
 
-main.o: ../robot_control/main.cpp 
+main.o: ../robot_control/main.cpp ../robot_control/marbleutility.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../robot_control/main.cpp
+
+marbleutility.o: ../robot_control/marbleutility.cpp ../robot_control/marbleutility.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o marbleutility.o ../robot_control/marbleutility.cpp
 
 ####### Install
 
