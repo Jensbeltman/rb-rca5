@@ -27,10 +27,9 @@ class LaserScanner {
   void parseScan(ConstLaserScanStampedPtr &_msg);
   LaserScan *getScan();
   LaserScan *generateScan(Mat map, Point2f pos, float dir);
+  // could be changed to int size for desired dim of img
 
-  cv::Mat visualizeScan(
-	  LaserScan *ls);  // could be changed to int size for desired dim of img
-
+  cv::Mat visualizeScan(LaserScan *ls);
  private:
   bool param_set = false;
   float _range_min;

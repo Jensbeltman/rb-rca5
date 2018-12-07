@@ -9,6 +9,7 @@
 #include <gazebo/transport/transport.hh>
 
 #include <localizor.h>
+#include "mclocalizer.h"
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -34,6 +35,7 @@ class MP {
   void localPoseCallback(ConstPosesStampedPtr &_msg);
   void poseCallback(ConstPosesStampedPtr &_msg);
   Localizor localizor;
+  MCLocalizer mclocalizer;
 
  private:
   Mat bitmap;

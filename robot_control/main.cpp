@@ -70,9 +70,10 @@ int main(int _argc, char **_argv) {
 
   // Loop
   while (true) {
-	mp.drawMap();
-	mp.localizor.printPose();
-	mp.localizor.montecarlo.show();
+    //mp.drawMap();
+    //mp.localizor.printPose();
+    //mp.localizor.montecarlo.show();
+    mp.mclocalizer.show();
 	gazebo::common::Time::MSleep(10);
 
 	mutex2.lock();
@@ -103,7 +104,7 @@ int main(int _argc, char **_argv) {
 	gazebo::msgs::Set(&msg, pose);
 	movementPublisher->Publish(msg);
   }
-
+  worldPublisher->Publish(controlMessage);
   // Make sure to shut everything down.
   gazebo::client::shutdown();
 }

@@ -8,18 +8,20 @@ MP::MP(Mat bmap) {
   cornerkernel = (Mat_<uchar>(2, 2) << 1, 3, 7, 5);
   findCorners(bitmap);
   cnrHeatC();
-  localizor = Localizor(bitmap, cnrheatmap);
+  //localizor = Localizor(bitmap, cnrheatmap);
+  mclocalizer = MCLocalizer(bitmap,4);
+
 
   node = gazebo::transport::NodePtr(new gazebo::transport::Node());
   node->Init();
 
   poseSubscriber =
-	  node->Subscribe("~/pose/info", &Localizor::poseCallback, &localizor);
+      node->Subscribe("~/pose/info", &MCLocalizer::globalPoseCallback, &mclocalizer);
   localPoseSubscriber = node->Subscribe(
-	  "~/pose/local/info", &Localizor::localPoseCallback, &localizor);
+      "~/pose/local/info", &MCLocalizer::localPoseCallback, &mclocalizer);
   lidarSubscriber =
 	  node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan",
-					  &Montecarlo::parseScan, &localizor.montecarlo);
+                      &MCLocalizer::lidarScanCallback, &mclocalizer);
 
   cout << "MP created" << endl;
 }
