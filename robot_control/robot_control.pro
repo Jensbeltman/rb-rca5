@@ -25,6 +25,7 @@ HEADERS += \
     laserscanner.h \
     movetopoint.h
 
-INCLUDEPATH += /home/bjarke/Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/
+INCLUDEPATH += $$PWD/fuzzylite/
 
-LIBS += -L /home/bjarke/Documents/.fuzzylite/fuzzylite-6.0/fuzzylite/release/bin -l fuzzylite-static
+#LIBS += -L /home/bl/git/fuzzy/robot_control/fuzzylite/release/bin -l fuzzylite-static
+LIBS += -L $$PWD/fuzzylite/release/bin -l fuzzylite-static
