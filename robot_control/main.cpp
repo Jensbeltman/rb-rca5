@@ -14,32 +14,9 @@
 using namespace cv;
 using namespace std;
 
-static boost::mutex mutexx;
-
 MarbleUtility mUtil;
 
 void statCallback(ConstWorldStatisticsPtr &_msg) { (void)_msg; }
-
-void poseCallback(ConstPosesStampedPtr &_msg) {
-  for (int i = 0; i < _msg->pose_size(); i++) {
-	if (_msg->pose(i).name() == "pioneer2dx") {
-	  mUtil.rx = (float)_msg->pose(i).position().x();
-	  mUtil.ry = (float)_msg->pose(i).position().y();
-	  mUtil.rz = (float)_msg->pose(i).position().z();
-	  mUtil.ro = M_PI * 0.25;
-	}
-  }
-}
-
-void cameraCallback(ConstImageStampedPtr &msg) {
-  std::size_t width = msg->image().width();
-  std::size_t height = msg->image().height();
-  const char *data = msg->image().data().c_str();
-  cv::Mat im(int(height), int(width), CV_8UC3, const_cast<char *>(data));
-
-  mUtil.src = im.clone();
-  mUtil.newData = true;
-}
 
 int main(int _argc, char **_argv) {
   mUtil.getDistrParam();
@@ -54,11 +31,12 @@ int main(int _argc, char **_argv) {
   gazebo::transport::SubscriberPtr statSubscriber =
 	  node->Subscribe("~/world_stats", statCallback);
 
-  gazebo::transport::SubscriberPtr poseSubscriber =
-	  node->Subscribe("~/pose/info", poseCallback);
+  //  gazebo::transport::SubscriberPtr poseSubscriber =
+  //	  node->Subscribe("~/pose/info", &MarbleUtility::poseCallback, &mUtil);
 
   gazebo::transport::SubscriberPtr cameraSubscriber =
-	  node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
+	  node->Subscribe("~/pioneer2dx/camera/link/camera/image",
+					  &MarbleUtility::cameraCallback, &mUtil);
 
   gazebo::transport::PublisherPtr movePublisher =
 	  node->Advertise<gazebo::msgs::Pose>("~/pose/modify");
@@ -82,17 +60,17 @@ int main(int _argc, char **_argv) {
   while (true) {
 	gazebo::common::Time::MSleep(10);
 
-	mutexx.lock();
-	int key = waitKey(2);
-	mutexx.unlock();
+	int key = waitKey(1);
+
 	if (key == key_esc) break;
 
 	if (test < mUtil.numberOfTests && key == key_right) {
 	  mUtil.distributeMarbles(movePublisher);
-	  while (!mUtil.newData)
-		;
-	  mUtil.findMarbles();
 	  mUtil.newData = false;
+	  while (mUtil.newData == false) {
+		;
+	  }
+	  mUtil.findMarbles();
 
 	  test++;
 

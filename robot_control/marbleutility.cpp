@@ -1,6 +1,45 @@
 #include "marbleutility.h"
 
-MarbleUtility::MarbleUtility() { namedWindow("camera", WINDOW_FREERATIO); }
+MarbleUtility::MarbleUtility() {
+  namedWindow("camera", WINDOW_FREERATIO);
+  namedWindow("display", WINDOW_FREERATIO);
+  namedWindow("live", WINDOW_FREERATIO);
+  srand(std::time(NULL));
+  src_hls_channels.resize(3);
+}
+void MarbleUtility::cameraCallback(ConstImageStampedPtr &msg) {
+  size_t width = msg->image().width();
+  size_t height = msg->image().height();
+  const char *data = msg->image().data().c_str();
+  Mat im(int(height), int(width), CV_8UC3, const_cast<char *>(data));
+  cvtColor(im, im, COLOR_RGB2BGR);
+  Mat adiff, im_hls;
+  vector<Mat> im_hls_channels;
+
+  cvtColor(im, im_hls, COLOR_BGR2HLS);
+  split(im_hls, im_hls_channels);
+
+  if (first) {
+	first = false;
+	src = im.clone();
+	src_hls = im_hls.clone();
+	src_hls_channels = im_hls_channels;
+	display = im.clone();
+  } else {
+	absdiff(im_hls_channels[2], src_hls_channels[2], adiff);
+	Scalar ssum = sum(adiff);
+	// cout << "Diff is " << ssum << endl;
+	src = im.clone();
+	src_hls = im_hls.clone();
+	src_hls_channels = im_hls_channels;
+	display = im.clone();
+	int threshold = 10;
+
+	if (ssum[0] > threshold) newData = true;
+  }
+
+  imshow("live", src);
+}
 
 void MarbleUtility::getDistrParam() {
   cout << "Enter number of marbles" << endl;
@@ -22,85 +61,179 @@ void MarbleUtility::getDistrParam() {
 
 void MarbleUtility::distributeMarbles(
 	gazebo::transport::PublisherPtr movePublisher) {
-  std::srand(std::time(0));
-
   gazebo::msgs::Pose msg;
   for (int i = 0; i < marble.size(); i++) {
 	marble[i].robotDistance = static_cast<float>(
 		distL + rand() / (RAND_MAX / (float)(distU - distL)));
 
 	marble[i].robotAngle =
-		M_PI / 4.0 +
-		(((M_PI / 12) - static_cast<float>(rand()) /
-							(static_cast<float>(RAND_MAX / (M_PI / 6)))));
+		M_PI / 12.0 + static_cast<float>(rand()) /
+						  (static_cast<float>(RAND_MAX / (M_PI / 3)));
 
-	float randX = rx + cos(marble[i].robotAngle) * marble[i].robotDistance;
-	float randY = ry + sin(marble[i].robotAngle) * marble[i].robotDistance;
+	marble[i].pose[0] =
+		rx + cos(marble[i].robotAngle) * marble[i].robotDistance;
+	marble[i].pose[1] =
+		ry + sin(marble[i].robotAngle) * marble[i].robotDistance;
 
-	ignition::math::Pose3d pose(randX, randY, 0.5, 0, 0, 0);
+	ignition::math::Pose3d pose(marble[i].pose[0], marble[i].pose[1], 0.5, 0, 0,
+								0);
 	cout << "Pose " << i << " is " << pose << endl;
 	gazebo::msgs::Set(&msg, pose);
 	msg.set_name(marble[i].name);
 	movePublisher->Publish(msg);
   }
+  // imshow("redist", src);
 }
 
 void MarbleUtility::findMarbles() {
   detectedMarble.clear();
   Mat hls;
-  cvtColor(src, hls, COLOR_BGR2HLS);
-  vector<Mat> hlsChannels(3);
-  split(hls, hlsChannels);
 
-  GaussianBlur(hlsChannels[2], hlsChannels[2], Size(5, 5), 2);
-  vector<Vec3f> circles;
-  HoughCircles(hlsChannels[2], circles, HOUGH_GRADIENT, 1,
-			   1,  // change this value to detect circles with
-				   // different distances to each other
-			   200, 30, 0,
-			   0  // change the last two parameters
-				  // (min_radius & max_radius) to detect larger circles
-  );
+  cvtColor(src, hls, COLOR_BGR2HLS);
+  vector<int *> boxes;
+  for (int r = 0; r < hls.rows; r++) {
+	for (int c = 0; c < hls.cols; c++) {
+	  int hue = hls.at<Vec3b>(r, c)[0];
+	  if (hue > 90 && hue < 140) {
+		int *box = new int[4];
+		box[0] = box[1] = c;
+		box[2] = box[3] = r;
+		boxes.push_back(box);
+		myFloodFill(&hls, box, c, r);
+		imshow("floodfill", hls);
+	  }
+	}
+  }
+
+  vector<int *> peeks;
+  for (int i = 0; i < boxes.size(); i++) {
+	rectangle(display, Point(boxes[i][0], boxes[i][2]),
+			  Point(boxes[i][1], boxes[i][3]), Scalar(0, 0, 255));
+
+	int p_start, p_end, p_mid, h, h_p = 0;
+	bool onPeek = false;
+	for (int c = boxes[i][0]; c <= boxes[i][1]; c++) {
+	  h = 0;
+	  for (int r = boxes[i][2]; r <= boxes[i][3]; r++) {
+		if (hls.at<Vec3b>(r, c)[0] ==
+			45)  // 45 is what marbles are set to in myFLoodFill
+		{
+		  h++;
+		}
+	  }
+	  if (h > h_p) {
+		p_start = c;
+		onPeek = true;
+	  }
+	  if (h < h_p && onPeek) {
+		onPeek = false;
+		int *peek = new int[2];
+		p_end = c - 1;
+		peek[0] = p_start + (p_end - p_start) / 2;
+		peek[1] = h_p;
+		peeks.push_back(peek);
+		line(display, Point(peek[0], boxes[i][2]), Point(peek[0], boxes[i][3]),
+			 Scalar(0, 255, 0));
+	  }
+	  h_p = h;
+	}
+  }
 
   float imgXmid = src.cols / 2;
   float fl = 277.13;
-  float flsq = fl * fl;
 
-  Mat display = src.clone();
-  for (size_t i = 0; i < circles.size(); i++) {
-	Vec3i c = circles[i];
-	Point center = Point(c[0], c[1]);
-	// circle center
-	circle(display, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
-	// circle outline
-	float r = c[2];
-	circle(display, center, (int)r, Scalar(255, 0, 255), 3, LINE_AA);
+  for (int i = 0; i < peeks.size(); i++) {
+	int *peek = peeks[i];
+	float mid_d = fabs(imgXmid - (float)peek[0]);
 
-	float lmin = sqrt(pow(imgXmid - center.x - r, 2.0f) + flsq);
-	float lmax = sqrt(pow(imgXmid - center.x + r, 2.0f) + flsq);
+	float theta = atan((peek[1] / 2) / sqrt(mid_d * mid_d + fl * fl));
+	float camDist = 0.5 / tan(theta);
 
-	float theta = atan(r / fl);
-	float camdist = (0.5 / tan(theta));
+	float camAngle = atan(mid_d / fl);
 
-	float cam2marbleAngle = atan(fabs(imgXmid - center.x) / fl);
+	float b = camDist;
+	float c = 0.2;
+	float bs = b * b;
+	float cs = c * c;
+	float A = M_PI - camAngle;
 
-	float dist = sqrt(camdist * camdist + 0.1 * 0.1 -
-					  2 * camdist * 0.1 * cos(M_PI - cam2marbleAngle));
+	float dist = sqrt(bs + cs - 2 * b * c * cos(A));
+	float a = dist;
+	float as = a * a;
+	float ang;
+	if (peek[0] < imgXmid)
+	  ang = ro + acos((cs + as - bs) / (2 * a * c));
+	else
+	  ang = ro - acos((cs + as - bs) / (2 * a * c));
+
+	// cout << "Angle is " << ang * 57.2957795 << endl;
 	ostringstream ss;
 	ss << dist;
 	string s(ss.str());
-	putText(src, s, center, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1,
-			LINE_AA);
+	putText(display, s, Point(peek[0], display.rows / 2), FONT_HERSHEY_SIMPLEX,
+			0.5, Scalar(0, 0, 255), 1, LINE_AA);
 
 	Marble m;
 	m.name = "detected_marble_" + to_string(i);
-	m.pose[0] = rx + cos(cam2marbleAngle) * dist;
-	m.pose[1] = ry + sin(cam2marbleAngle) * dist;
-
+	m.pose[0] = rx + cos(ang) * dist;
+	m.pose[1] = ry + sin(ang) * dist;
+	cout << "DPose " << i << " is " << m.pose[0] << " " << m.pose[1] << endl;
+	cout << "Diff is "
+		 << sqrt(pow(m.pose[0] - marble[0].pose[0], 2) +
+				 pow(m.pose[1] - marble[0].pose[1], 2))
+		 << endl;
 	detectedMarble.push_back(m);
   }
+  imshow("display", display);
+}
 
-  imshow("camera", display);
+void MarbleUtility::myFloodFill(Mat *img, int *b, int c, int r) {
+  uchar h = img->at<Vec3b>(r, c)[0];
+  if (h == 45) return;
+  if (100 > h || h > 130) return;
+  img->at<Vec3b>(r, c)[0] = 45;
+
+  if (c < b[0]) b[0] = c;
+  if (c > b[1]) b[1] = c;
+  if (r < b[2]) b[2] = r;
+  if (r > b[3]) b[3] = r;
+
+  myFloodFill(img, b, c + 1, r);
+  myFloodFill(img, b, c - 1, r);
+  myFloodFill(img, b, c, r + 1);
+  myFloodFill(img, b, c, r - 1);
+  return;
+}
+
+void MarbleUtility::matchMarbles() {
+  pairs.clear();
+  for (int dm = 0; dm < detectedMarble.size(); dm++) {
+	for (int m = 0; m < marble.size(); m++) {
+	  pairs.push_back(make_pair(&detectedMarble[dm], &marble[m]));
+	}
+  }
+  sort(pairs.begin(), pairs.end(), &pairDist);
+  pairs.resize(detectedMarble.size());
+
+  for (int i = 0; i < pairs.size(); i++) {
+	//	cout << pairs[i].second->name << " found with Error "
+	//		 << distance(*(pairs[i].first), *(pairs[i].second));
+  }
+}
+
+float MarbleUtility::distance(Marble a, Marble b) {
+  return sqrt(pow(a.pose[0] - b.pose[0], 2) + pow(a.pose[1] - b.pose[1], 2));
+}
+float MarbleUtility::distance(Marble *a, Marble *b) {
+  return sqrt(pow(a->pose[0] - b->pose[0], 2) +
+			  pow(a->pose[1] - b->pose[1], 2));
+}
+
+bool MarbleUtility::pairDist(const pair<Marble *, Marble *> &a,
+							 const pair<Marble *, Marble *> &b) {
+  MarbleUtility mu;
+  Marble a1 = *a.first, a2 = *a.second, b1 = *b.first, b2 = *b.second;
+  return (mu.distance(a1, a2) < mu.distance(b1, b2));
 }
 bool marbleDist(const Marble &a, const Marble &b) {
   return (a.robotDistance > b.robotDistance);
@@ -109,3 +242,63 @@ bool marbleDist(const Marble &a, const Marble &b) {
 bool marbleAng(const Marble &a, const Marble &b) {
   return (a.robotAngle > b.robotAngle);
 }
+
+// void MarbleUtility::findMarbles() {
+//  detectedMarble.clear();
+//  Mat hls;
+//  cvtColor(src, hls, COLOR_BGR2HLS);
+//  vector<Mat> hlsChannels(3);
+//  split(hls, hlsChannels);
+
+//  GaussianBlur(hlsChannels[2], hlsChannels[2], Size(5, 5), 2);
+//  vector<Vec3f> circles;
+//  HoughCircles(hlsChannels[2], circles, HOUGH_GRADIENT, 1,
+//			   16,  // change this value to detect circles with
+//					// different distances to each other
+//			   200, 30, 0,
+//			   0  // change the last two parameters
+//				  // (min_radius & max_radius) to detect larger
+//circles
+//  );
+
+//  float imgXmid = src.cols / 2;
+//  float fl = 277.13;
+//  float flsq = fl * fl;
+
+//  for (size_t i = 0; i < circles.size(); i++) {
+//	Vec3i c = circles[i];
+//	Point center = Point(c[0], c[1]);
+//	// circle center
+//	circle(display, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
+//	// circle outline
+//	float r = c[2];
+//	circle(display, center, (int)r, Scalar(255, 0, 255), 3, LINE_AA);
+
+//	float lmin = sqrt(pow(imgXmid - center.x - r, 2.0f) + flsq);
+//	float lmax = sqrt(pow(imgXmid - center.x + r, 2.0f) + flsq);
+
+//	float theta = atan(r / fl);
+//	float camdist = (0.5 / tan(theta));
+
+//	float cam2marbleAngle = atan(fabs(imgXmid - center.x) / fl);
+//	//	float cam2marbleAngle =
+//	//		acos((lmin * lmin + lmax * lmax - r * r) / (2 * lmin *
+//lmax));
+
+//	float dist = sqrt(camdist * camdist + 0.1 * 0.1 -
+//					  2 * camdist * 0.1 * cos(M_PI - cam2marbleAngle
+//+ ro)); 	ostringstream ss; 	ss << camdist; 	string s(ss.str()); 	putText(display,
+//s, center, FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 0, 255), 1, 			LINE_AA);
+
+//	Marble m;
+//	m.name = "detected_marble_" + to_string(i);
+//	m.pose[0] = rx + cos(ro + cam2marbleAngle) * dist;
+//	m.pose[1] = ry + sin(ro + cam2marbleAngle) * dist;
+//	cout << "DPose " << i << " is " << m.pose[0] << " " << m.pose[1] <<
+//endl; 	cout << "Diff is "
+//		 << sqrt(pow(m.pose[0] - marble[0].pose[0], 2) +
+//				 pow(m.pose[1] - marble[0].pose[1], 2))
+//		 << endl;
+//	detectedMarble.push_back(m);
+//  }
+//}

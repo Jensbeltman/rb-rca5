@@ -26,7 +26,8 @@
     <model name="pioneer2dx">
 
   <pose>-49 -49 0 0 0 0.78539816339</pose>
-      <include>
+  <include>
+	  <static>true</static>
         <uri>model://pioneer2dx</uri>
       </include>
       <include>
