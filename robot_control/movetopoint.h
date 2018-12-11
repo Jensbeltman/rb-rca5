@@ -18,7 +18,7 @@ public:
     MoveToPoint();
 
     void setGoal(float x, float y);
-    distAndAngle leftToGoal(float positionX, float positionY);
+    distAndAngle leftToGoal(float positionX, float positionY, float phi);
     distAndAngle leftToGoal();
     void setPosition(ConstPosesStampedPtr &msg);
     void displayGoal(ConstPosesStampedPtr &msg);

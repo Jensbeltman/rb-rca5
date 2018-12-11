@@ -12,18 +12,23 @@ using namespace cv;
 //#include "fuzzy1.h"
 //#include "fuzzy2.h"
 #include "fuzzy_control.h"
-#include "laserscanner.h"
+#include "ransacscanner.h"
 #include "movetopoint.h"
+#include "mclocalizor.h"
 
 static boost::mutex mutex;
 
 
-
-
 int main(int _argc, char **_argv) {
+
+    cv::Mat map =
+    imread("../models/bigworld/meshes/floor_plan.png", IMREAD_GRAYSCALE);
 
     MoveToPoint testGoal;
     laserscanner scanner;
+    MCLocalizor mc(map, 4);
+
+    gazebo::common::Time::MSleep(500);
 
     //std::vector<std::pair<int, int>> goals = {std::make_pair(80, 38), std::make_pair(90, 35), std::make_pair(96, 14), std::make_pair(104, 12), std::make_pair(111, 31), std::make_pair(103, 38)};
     std::vector<std::pair<int, int>> goals = {std::make_pair(90, 30), std::make_pair(96, 14), std::make_pair(104, 12), std::make_pair(111, 31), std::make_pair(103, 38)};
@@ -37,17 +42,23 @@ int main(int _argc, char **_argv) {
   node->Init();
 
 
-  gazebo::transport::SubscriberPtr toPoint =
-          node->Subscribe("~/pose/info", &MoveToPoint::displayGoal, &testGoal);
+  //gazebo::transport::SubscriberPtr toPoint =
+  //        node->Subscribe("~/pose/info", &MoveToPoint::displayGoal, &testGoal);
 
-  gazebo::transport::SubscriberPtr setPos =
-          node->Subscribe("~/pose/info", &MoveToPoint::setPosition, &testGoal);
-
-  gazebo::transport::SubscriberPtr laserScanSubscriber =
-          node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &laserscanner::performScan, &scanner);
+  //gazebo::transport::SubscriberPtr setPos =
+  //        node->Subscribe("~/pose/info", &MoveToPoint::setPosition, &testGoal);
 
   gazebo::transport::SubscriberPtr laserScanRansac =
           node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &laserscanner::findLines, &scanner);
+
+  gazebo::transport::SubscriberPtr localPoseSubscriber =
+          node->Subscribe("~/pose/local/info", &MCLocalizor::localPoseCallback, &mc);
+
+  gazebo::transport::SubscriberPtr globalPoseSubscriber =
+          node->Subscribe("~/pose/info", &MCLocalizor::globalPoseCallback, &mc);
+
+  gazebo::transport::SubscriberPtr lidarSubscriber =
+          node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &MCLocalizor::lidarScanCallback, &mc);
 
 
 
@@ -86,7 +97,7 @@ int main(int _argc, char **_argv) {
   int goalIndex = 0;
 
   testGoal.setGoal(goals[goalIndex].first, goals[goalIndex].second);
-    goalIndex++;
+  goalIndex++;
 
     bool obstacleOn = false;
 
@@ -101,14 +112,21 @@ int main(int _argc, char **_argv) {
     if (key == key_esc)
       break;
 
+    mc.show();
 
+    conf configuration = mc.getConfiguration();
 
-    distAndAngle goal = testGoal.leftToGoal();
+    //std::cout << configuration.x/4 << " : " << configuration.y/4 << " : " << configuration.dir << std::endl;
+    distAndAngle goal = testGoal.leftToGoal(configuration.x/4, configuration.y/4, configuration.dir);
     closestLine scan = scanner.getClosestLine();
+
+    //std::cout << goal.distance << " : " << goal.angle << std::endl;
 
     if (goal.distance < 1.2) {
         testGoal.setGoal(goals[goalIndex].first, goals[goalIndex].second);
-        goalIndex++;
+        if (++goalIndex == (int)goals.size()) {
+          goalIndex = 0;
+        }
     }
 
     if (scan.distance2 < 2) {
@@ -126,7 +144,7 @@ int main(int _argc, char **_argv) {
         dir = controller1.getValues().direction;
     } else {
         //std::cout << "G" << std::endl;
-        controller2.setValues(goal.distance, goal.angle);
+        controller2.setValues(goal.distance, -goal.angle);
         controller2.process();
         speed = controller2.getValues().speed;
         dir = controller2.getValues().direction;

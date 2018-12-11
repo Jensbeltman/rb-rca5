@@ -14,13 +14,26 @@ void MoveToPoint::setGoal(float x, float y)
     goal = std::make_pair(x, y);
 }
 
-distAndAngle MoveToPoint::leftToGoal(float positionX, float positionY)
+distAndAngle MoveToPoint::leftToGoal(float positionX, float positionY, float phi)
 {
     distAndAngle output;
 
     output.distance = sqrt(pow(goal.first-positionX, 2)+pow(goal.second-positionY, 2));
-    output.angle = atan2(goal.second-positionY, goal.first-positionX);
+    //output.distance = sqrt(pow(goal.first-position.first, 2)+pow(goal.second-position.second, 2));
+    //output.angle = atan2(goal.second-position.second, goal.first-position.first) - orientation;
 
+    float egern = fmod(2*M_PI + atan2(goal.second-positionY, goal.first-positionX),2 * M_PI);
+
+    //std::cout << std::setw(10) << std::setprecision(3) << egern - orientation << "|";
+
+    if(egern - phi > M_PI){
+        egern -= 2*M_PI;
+    }else if(egern - phi < -M_PI){
+        egern += 2*M_PI;
+    }
+
+    output.angle = egern - phi;
+   //std::cout << std::setw(10) << std::setprecision(3) << phi << std::setw(10) << std::setprecision(3) << egern << std::setw(10) << std::setprecision(3) << egern - phi << std::endl;
     return output;
 }
 

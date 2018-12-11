@@ -5,8 +5,10 @@ CONFIG -= qt
 
 SOURCES += main.cpp \
     fuzzy_control.cpp \
-    laserscanner.cpp \
-    movetopoint.cpp
+    movetopoint.cpp \
+    mclocalizor.cpp \
+    ransacscanner.cpp \
+    laserscanner.cpp
 
 CONFIG += link_pkgconfig
 PKGCONFIG += gazebo
@@ -14,8 +16,10 @@ PKGCONFIG += opencv
 
 HEADERS += \
     fuzzy_control.h \
-    laserscanner.h \
-    movetopoint.h
+    movetopoint.h \
+    mclocalizor.h \
+    ransacscanner.h \
+    laserscanner.h
 
 INCLUDEPATH += $$PWD/fuzzylite/
 
