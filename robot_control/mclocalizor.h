@@ -19,12 +19,12 @@ struct conf {
 };
 
 
-class MCLocalizer
+class MCLocalizor
 {
 public:
-    MCLocalizer(){}
-    MCLocalizer(Mat m, uchar s);
-    ~MCLocalizer();
+    MCLocalizor(){}
+    MCLocalizor(Mat m, uchar s);
+    ~MCLocalizor();
 
     // Gazebo subscribers
     void localPoseCallback(ConstPosesStampedPtr &_msg);
@@ -53,7 +53,7 @@ private:
     LaserScanner laserScanner;
 
     std::default_random_engine gen;
-    std::normal_distribution<float> ndist = std::normal_distribution<float>(1.0, 0.2);
+    std::normal_distribution<float> ndist = std::normal_distribution<float>(1.0, 0.3);
     std::normal_distribution<float>   ndist_conf = std::normal_distribution<float> (0,N_CONF/3);
 
     float t = -1;
@@ -66,10 +66,6 @@ private:
     void tempBelief();
     void calcWeights(LaserScan *ls);
     void localize(LaserScan *ls);
-
-
-
-
 
 };
 

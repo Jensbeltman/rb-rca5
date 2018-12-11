@@ -27,7 +27,7 @@ void LaserScanner::parseScan(ConstLaserScanStampedPtr& msg) {
 
 LaserScan* LaserScanner::getScan() { return _current_scan; }
 
-LaserScan* LaserScanner::generateScan(Mat map, Point2f pos, float dir) {
+LaserScan* LaserScanner::generateScan(Mat& map, Point2f pos, float dir) {
   Point2f p = pos + 0.8 * Point2f(cos(dir), sin(dir));
 
   float* rays = new float[_nranges];
@@ -39,7 +39,7 @@ LaserScan* LaserScanner::generateScan(Mat map, Point2f pos, float dir) {
   return new LaserScan(rays, _nranges);
 }
 
-float LaserScanner::ray(Mat map, Point2f p, float angle) {
+float LaserScanner::ray(Mat& map, Point2f p, float angle) {
   Point2f delta(cos(angle), sin(angle));
   float scale = (72. / 25.4) * 2;
   for (float r = 0; r < _range_max * scale; r += 2) {
@@ -59,15 +59,12 @@ cv::Mat LaserScanner::visualizeScan(LaserScan* ls) {
   for (int i = 0; i < _nranges; i++) {
 	float angle = _angle_min + i * _angle_increment;
 	float range = std::min(float(ls->pts[i]), _range_max);
-	//    double intensity = msg->scan().intensities(i);
 	cv::Point2f startpt(100.5f + _range_min * px_per_m * std::cos(angle),
 						100.5f - _range_min * px_per_m * std::sin(angle));
 	cv::Point2f endpt(100.5f + range * px_per_m * std::cos(angle),
 					  100.5f - range * px_per_m * std::sin(angle));
 	cv::line(im, startpt * 16, endpt * 16, cv::Scalar(255, 255, 255, 255), 1,
-			 cv::LINE_AA, 4);
-
-	//    std::cout << angle << " " << range << " " << intensity << std::endl;
+             cv::LINE_AA, 4);
   }
   cv::circle(im, cv::Point(100, 100), 2, cv::Scalar(0, 0, 255));
 

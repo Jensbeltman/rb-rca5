@@ -10,39 +10,35 @@
 
 #include <iostream>
 
-#include "montecarlo.h"
-
-#define G2P ((70.0 / 25.4) * 0.5)
-#define P2G ((25.4 / 70.0) * 2.0)
+#define G2P ((72.0 / 25.4) * 0.5)
+#define P2G ((25.4 / 72.0) * 2.0)
 using namespace std;
 using namespace cv;
 
 class Localizor {
  public:
-  Localizor();
-  Localizor(Mat, Mat);
+  Localizor(int = 0, int = 0, float = 0);
   void localPoseCallback(ConstPosesStampedPtr &_msg);
-  void poseCallback(ConstPosesStampedPtr &_msg);
+  void globalPoseCallback(ConstPosesStampedPtr &_msg);
   void printPose();
   double getX();
   double getY();
-  bool cnrInrange(int threshold);
-  // Montecarlo
-  Montecarlo montecarlo;
 
  private:
-  // maps
-  Mat bitmap, cnrheatmap, montecarloMap;
-  // position calculations
-  double prev_p_l, prev_p_r, prev_t;
-  double dp_l, dp_r, dt, t;
-  double x, y, phi, rx, ry, rphi, mx, my, tx, ty, tphi;
-  double rw, lw;
-  double qw, qx, qy, qz, p_l, p_r, v_l, v_r;
-  bool first;
-  bool mcActive = false;
-  int nMonte = 0;
-  int nmcA = 0;
+  float s = ((72.0 / 25.4) * 2);
+
+  Point2f upos;
+  float   uphi;
+
+  Point2f apos; // * actual pos
+  float   aphi; // * and dir
+
+  Point2f center;
+
+  float t = -1;
+  float pl = 0;
+  float pr = 0;
+
 };
 
 #endif  // LOCALIZOR_H

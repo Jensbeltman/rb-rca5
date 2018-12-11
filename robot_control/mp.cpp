@@ -8,20 +8,8 @@ MP::MP(Mat bmap) {
   cornerkernel = (Mat_<uchar>(2, 2) << 1, 3, 7, 5);
   findCorners(bitmap);
   cnrHeatC();
-  //localizor = Localizor(bitmap, cnrheatmap);
-  mclocalizer = MCLocalizer(bitmap,4);
-
-
-  node = gazebo::transport::NodePtr(new gazebo::transport::Node());
-  node->Init();
-
-  poseSubscriber =
-      node->Subscribe("~/pose/info", &MCLocalizer::globalPoseCallback, &mclocalizer);
-  localPoseSubscriber = node->Subscribe(
-      "~/pose/local/info", &MCLocalizer::localPoseCallback, &mclocalizer);
-  lidarSubscriber =
-	  node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan",
-                      &MCLocalizer::lidarScanCallback, &mclocalizer);
+  localizor = Localizor(bitmap.cols, bitmap.rows);
+  mclocalizor = MCLocalizor(bitmap,4);
 
   cout << "MP created" << endl;
 }
@@ -151,19 +139,29 @@ void MP::cnrHeatC() {
 }
 
 void MP::drawMap() {
-  // cvtColor(bitmap, display, COLOR_GRAY2BGR);
-  display = cnrheatmap.clone();
+  cvtColor(bitmap, display, COLOR_GRAY2BGR);
+  //display = cnrheatmap.clone();
   display.at<Vec3b>(localizor.getY(), localizor.getX()) = Vec3b(255, 0, 0);
   imshow("map", display);
+
+
 }
 
 void MP::localPoseCallback(ConstPosesStampedPtr& _msg) {
   localizor.localPoseCallback(_msg);
+  mclocalizor.localPoseCallback(_msg);
 }
 
-void MP::poseCallback(ConstPosesStampedPtr& _msg) {
-  localizor.poseCallback(_msg);
+void MP::globalPoseCallback(ConstPosesStampedPtr& _msg) {
+    localizor.globalPoseCallback(_msg);
+    mclocalizor.globalPoseCallback(_msg);
 }
+
+void MP::lidarScanCallback(ConstLaserScanStampedPtr &_msg)
+{
+    mclocalizor.lidarScanCallback(_msg);
+}
+
 int MP::findCorners(Mat m) {
   cnr.clear();
   corner C;

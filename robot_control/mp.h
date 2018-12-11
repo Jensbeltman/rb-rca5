@@ -9,7 +9,7 @@
 #include <gazebo/transport/transport.hh>
 
 #include <localizor.h>
-#include "mclocalizer.h"
+#include "mclocalizor.h"
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -33,9 +33,11 @@ class MP {
   void cnrHeatC();
   void drawMap();
   void localPoseCallback(ConstPosesStampedPtr &_msg);
-  void poseCallback(ConstPosesStampedPtr &_msg);
+  void globalPoseCallback(ConstPosesStampedPtr &_msg);
+  void lidarScanCallback(ConstLaserScanStampedPtr &msg);
+
   Localizor localizor;
-  MCLocalizer mclocalizer;
+  MCLocalizor mclocalizor;
 
  private:
   Mat bitmap;
@@ -49,12 +51,6 @@ class MP {
   Mat display;
 
   Mat cornerkernel;
-
-  // Gazebo setup
-  gazebo::transport::NodePtr node;
-  gazebo::transport::SubscriberPtr poseSubscriber;
-  gazebo::transport::SubscriberPtr localPoseSubscriber;
-  gazebo::transport::SubscriberPtr lidarSubscriber;
 
   //	vector<Mat> mask;
 

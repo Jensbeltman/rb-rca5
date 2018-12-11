@@ -1,6 +1,6 @@
-#include "mclocalizer.h"
+#include "mclocalizor.h"
 
-MCLocalizer::MCLocalizer(Mat m, uchar s)
+MCLocalizor::MCLocalizor(Mat m, uchar s)
 {
     scale = s;
 
@@ -29,13 +29,13 @@ MCLocalizer::MCLocalizer(Mat m, uchar s)
 
 }
 
-MCLocalizer::~MCLocalizer()
+MCLocalizor::~MCLocalizor()
 {
     delete _ptex;
     delete _btex;
 }
 
-void MCLocalizer::localPoseCallback(ConstPosesStampedPtr &_msg)
+void MCLocalizor::localPoseCallback(ConstPosesStampedPtr &_msg)
 {
     float c_pl; // * Current position of wheels
     float c_pr; // *
@@ -63,6 +63,7 @@ void MCLocalizer::localPoseCallback(ConstPosesStampedPtr &_msg)
         c_pl = atan2(nqw, nqy);
       }
     }
+
     // Extract time from the msg
     float c_t = _msg->time().sec() + 0.000000001 * _msg->time().nsec();
 
@@ -81,16 +82,16 @@ void MCLocalizer::localPoseCallback(ConstPosesStampedPtr &_msg)
     pl = c_pl; // | overwrite
     t  = c_t;  // *
 
-    if (d_pl > 1.8 * M_PI)  d_pl -= 2 * M_PI; // *
-    if (d_pr > 1.8 * M_PI)  d_pr -= 2 * M_PI; // | delta correction
-    if (d_pr < -1.8 * M_PI) d_pr += 2 * M_PI; // | when pos jumps 2 pi
-    if (d_pl < -1.8 * M_PI) d_pl += 2 * M_PI; // *
+    if (d_pl > M_PI)  d_pl -= 2 * M_PI; // *
+    if (d_pr > M_PI)  d_pr -= 2 * M_PI; // | delta correction
+    if (d_pr < -M_PI) d_pr += 2 * M_PI; // | when pos jumps 2 pi
+    if (d_pl < -M_PI) d_pl += 2 * M_PI; // *
 
     const double l = 0.34 + 0.05;
     const double r = 0.12;
 
-    double vl = (2 * d_pl / dt) * 0.12; // * Velocity of wheels
-    double vr = (2 * d_pr / dt) * 0.12; // *
+    double vl = (2 * d_pl / dt) * r; // * Velocity of wheels
+    double vr = (2 * d_pr / dt) * r; // *
 
     float dphi = 0;
     float dx   = vr * dt;
@@ -110,13 +111,13 @@ void MCLocalizer::localPoseCallback(ConstPosesStampedPtr &_msg)
 
 }
 
-void MCLocalizer::lidarScanCallback(ConstLaserScanStampedPtr &msg)
+void MCLocalizor::lidarScanCallback(ConstLaserScanStampedPtr &msg)
 {
     laserScanner.parseScan(msg);
     localize(laserScanner.getScan());
 }
 
-void MCLocalizer::globalPoseCallback(ConstPosesStampedPtr &_msg)
+void MCLocalizor::globalPoseCallback(ConstPosesStampedPtr &_msg)
 {
     for (int i = 0; i < _msg->pose_size(); i++) {
       if (_msg->pose(i).name() == "pioneer2dx") {
@@ -128,11 +129,10 @@ void MCLocalizer::globalPoseCallback(ConstPosesStampedPtr &_msg)
     }
 }
 
-void MCLocalizer::show()
+void MCLocalizor::show()
 {
     Mat m = Mat(map.rows, map.cols, CV_8UC3);
     cvtColor(map, m, COLOR_GRAY2BGR);
-    //_btex->lock();
     for(int i = 0; i < N_CONF; i++){
       Point2f p(bel[i].x,bel[i].y);
       arrowedLine(
@@ -140,36 +140,28 @@ void MCLocalizer::show()
           p + Point2f(8 * cos(bel[i].dir), 8 * sin(bel[i].dir)),
           Scalar(120, 120, 255), 1, LINE_AA, 0, .5);
     }
-    //_btex->unlock();
-    /*
-    arrowedLine(
-        m, rConf[0].pos,
-        rConf[0].pos + Point2f(8 * cos(rConf[0].dir), 8 * sin(rConf[0].dir)),
-        Scalar(0, 255, 0), 1, LINE_AA, 0, .5);*/
     arrowedLine(m, apos, apos + Point2f(6 * cos(aphi), 6 * sin(aphi)), Scalar(255, 0, 0), 1, LINE_AA, 0, .5);
 
-     /*imshow("Real Lidar", laserScanner.visualizeScan(laserScanner.getScan()));
-     imshow("Map Lidar",
-    laserScanner.visualizeScan(laserScanner.generateScan(map, Point2f(bel[0].x,bel[0].y), bel[0].dir)));
-    */
-    imshow("Map", m);
+    //imshow("real lidar", laserScanner.visualizeScan(laserScanner.getScan()));
+    //imshow("fake lidar", laserScanner.visualizeScan(laserScanner.generateScan(map, Point2f(tbel[0].x,tbel[0].y), tbel[0].dir)));
+    imshow("mc map", m);
 }
 
-void MCLocalizer::tempBelief()
+void MCLocalizor::tempBelief()
 {
     double x = 0;
     double y = 0;
     double phi = 0;
 
-        x   = upos.x; upos.x = 0;
-        y   = upos.y; upos.y = 0;
-        phi = uphi;   uphi   = 0;
+    x   = upos.x; upos.x = 0;
+    y   = upos.y; upos.y = 0;
+    phi = uphi;   uphi   = 0;
 
     for(int i = 0; i < N_CONF; i++){
         double tphi = bel[i].dir ;
         tbel[i].x   = bel[i].x + (x*cos(tphi) + y*sin(tphi))*s * ndist(gen);
         tbel[i].y   = bel[i].y + (x*sin(tphi) + y*cos(tphi))*s * ndist(gen);
-        tbel[i].dir = tphi + phi* ndist(gen);
+        tbel[i].dir = tphi + phi * ndist(gen);
     }
 }
 
@@ -177,7 +169,7 @@ bool conf_sorter(conf const &lhs, conf const &rhs) {
   return lhs.weight < rhs.weight;
 }
 
-void MCLocalizer::calcWeights(LaserScan *ls)
+void MCLocalizor::calcWeights(LaserScan *ls)
 {
     for(int i = 0; i < N_CONF; i++){
         Point2f p(tbel[i].x,tbel[i].y);
@@ -189,17 +181,15 @@ void MCLocalizer::calcWeights(LaserScan *ls)
         tbel[i].weight = score / ls->ntps;
         delete gls;
     }
-
-
-    std::cout << std::endl;
 }
 
-void MCLocalizer::localize(LaserScan *ls)
+void MCLocalizor::localize(LaserScan *ls)
 {
     tempBelief();
     calcWeights(ls);
 
     std::sort(tbel.begin(), tbel.end(), &conf_sorter);
+
     for(int i = 0; i < N_CONF; i++){
         int sel = std::abs(ndist_conf(gen));
         if (sel >= N_CONF) sel = N_CONF - 1;

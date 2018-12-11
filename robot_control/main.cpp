@@ -9,6 +9,9 @@
 #include <localizor.h>
 #include <mp.h>
 #include <mutex>
+
+#include <stdlib.h>
+
 using namespace std;
 using namespace cv;
 
@@ -33,6 +36,10 @@ int main(int _argc, char **_argv) {
   cv::Mat mpp =
 	  imread("../models/bigworld/meshes/floor_plan.png", IMREAD_COLOR);
 
+  //vector<string> args;
+
+  //args.push_back( "GAZEBO_MASTER_URI=http://localhost:11346" );
+  //setenv("GAZEBO_MASTER_URI","http://localhost:11346",1);
   // Load gazebo
   gazebo::client::setup(_argc, _argv);
   namedWindow("camera", WINDOW_FREERATIO);
@@ -40,12 +47,24 @@ int main(int _argc, char **_argv) {
   // initialise a MP object for localization
   MP mp(mpp);
 
+  gazebo::common::Time::MSleep(500);
+
   // Create our node for communication
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
   node->Init();
 
   gazebo::transport::SubscriberPtr cameraSubscriber =
 	  node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
+
+  gazebo::transport::SubscriberPtr localPoseSubscriber =
+        node->Subscribe("~/pose/local/info", &MP::localPoseCallback, &mp);
+
+  gazebo::transport::SubscriberPtr globalPoseSubscriber =
+          node->Subscribe("~/pose/info", &MP::globalPoseCallback, &mp);
+
+  gazebo::transport::SubscriberPtr lidarSubscriber =
+        node->Subscribe("~/pioneer2dx/hokuyo/link/laser/scan", &MP::lidarScanCallback, &mp);
+
 
   // Publish to the robot vel_cmd topic
   gazebo::transport::PublisherPtr movementPublisher =
@@ -70,10 +89,10 @@ int main(int _argc, char **_argv) {
 
   // Loop
   while (true) {
-    //mp.drawMap();
+    mp.drawMap();
     //mp.localizor.printPose();
     //mp.localizor.montecarlo.show();
-    mp.mclocalizer.show();
+    mp.mclocalizor.show();
 	gazebo::common::Time::MSleep(10);
 
 	mutex2.lock();

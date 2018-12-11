@@ -26,7 +26,7 @@ class LaserScanner {
   LaserScanner();
   void parseScan(ConstLaserScanStampedPtr &_msg);
   LaserScan *getScan();
-  LaserScan *generateScan(Mat map, Point2f pos, float dir);
+  LaserScan *generateScan(Mat& map, Point2f pos, float dir);
   // could be changed to int size for desired dim of img
 
   cv::Mat visualizeScan(LaserScan *ls);
@@ -39,7 +39,7 @@ class LaserScanner {
   int _nranges;
 
   LaserScan *_current_scan = new LaserScan(new float, 0);
-  float ray(Mat map, Point2f p, float angle);
+  float ray(Mat& map, Point2f p, float angle);
 };
 
 #endif  // LASERSCANNER_H
