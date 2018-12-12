@@ -29,12 +29,15 @@ struct Marble {
 class MarbleUtility {
  public:
   MarbleUtility();
+  ~MarbleUtility();
 
   void poseCallback(ConstPosesStampedPtr &);
   void cameraCallback(ConstImageStampedPtr &);
 
   void getDistrParam();
   void distributeMarbles(gazebo::transport::PublisherPtr);
+  void distributeMarble(gazebo::transport::PublisherPtr, int mI, float dist,
+						float ang);
   void findMarbles();
   void myFloodFill(Mat *img, int *b, int c, int r);
 
@@ -45,7 +48,10 @@ class MarbleUtility {
   static bool marbleAng(const Marble &, const Marble &);
   static bool pairDist(const pair<Marble *, Marble *> &,
 					   const pair<Marble *, Marble *> &);
+  float safeAcos(float x);
 
+  ofstream marbleData;
+  string dataName = "marbleData";
   bool newData = false;
   bool first = true;
   float rx = -49, ry = -49, rz = 0, ro = M_PI * 0.25;

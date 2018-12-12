@@ -19,8 +19,6 @@ MarbleUtility mUtil;
 void statCallback(ConstWorldStatisticsPtr &_msg) { (void)_msg; }
 
 int main(int _argc, char **_argv) {
-  mUtil.getDistrParam();
-
   gazebo::client::setup(_argc, _argv);
 
   // Create our node for communication
@@ -30,9 +28,6 @@ int main(int _argc, char **_argv) {
   // Listen to Gazebo topics
   gazebo::transport::SubscriberPtr statSubscriber =
 	  node->Subscribe("~/world_stats", statCallback);
-
-  //  gazebo::transport::SubscriberPtr poseSubscriber =
-  //	  node->Subscribe("~/pose/info", &MarbleUtility::poseCallback, &mUtil);
 
   gazebo::transport::SubscriberPtr cameraSubscriber =
 	  node->Subscribe("~/pioneer2dx/camera/link/camera/image",
@@ -57,24 +52,25 @@ int main(int _argc, char **_argv) {
   const int key_right = 83;
   const int key_esc = 27;
 
-  while (true) {
-	gazebo::common::Time::MSleep(10);
+  gazebo::common::Time::MSleep(10);
 
-	int key = waitKey(1);
+  int key = waitKey(1);
 
-	if (key == key_esc) break;
+  int dL = 3;
+  int dU = 50;
+  int aL = 20;
+  int aU = 70;
+  for (int d = dL; d <= dU; d += 1) {
+	for (int a = aL; a <= aU; a += 5) {
+	  cout << d << "," << a << endl;
+	  mUtil.distributeMarble(movePublisher, 0, (float)d, a * 0.0174532925);
 
-	if (test < mUtil.numberOfTests && key == key_right) {
-	  mUtil.distributeMarbles(movePublisher);
 	  mUtil.newData = false;
+	  // gazebo::common::Time::MSleep(100);
 	  while (mUtil.newData == false) {
 		;
 	  }
 	  mUtil.findMarbles();
-
-	  test++;
-
-	  cout << endl;
 	}
   }
 
