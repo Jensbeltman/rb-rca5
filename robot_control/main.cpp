@@ -9,14 +9,28 @@
 
 using namespace cv;
 
-//#include "fuzzy1.h"
-//#include "fuzzy2.h"
 #include "fuzzy_control.h"
 #include "ransacscanner.h"
 #include "movetopoint.h"
 #include "mclocalizor.h"
+#include <fstream>
 
 static boost::mutex mutex;
+
+void cameraCallback(ConstImageStampedPtr &msg) {
+
+  std::size_t width = msg->image().width();
+  std::size_t height = msg->image().height();
+  const char *data = msg->image().data().c_str();
+  cv::Mat im(int(height), int(width), CV_8UC3, const_cast<char *>(data));
+
+  im = im.clone();
+  cv::cvtColor(im, im, COLOR_RGB2BGR);
+
+  mutex.lock();
+  cv::imshow("camera", im);
+  mutex.unlock();
+}
 
 
 int main(int _argc, char **_argv) {
@@ -30,8 +44,27 @@ int main(int _argc, char **_argv) {
 
     gazebo::common::Time::MSleep(500);
 
+    std::vector<std::pair<int, int>> goals;
+    //Load in the list of points.
+    std::ifstream goalsFile("../goals.txt");
+    std::string line;
+    int n1, n2;
+    while(!goalsFile.eof()) {
+        std::getline(goalsFile, line);
+        if (line.size()) {
+            for(int i = 0; i < (int)line.size(); i++) {
+                if (line[i] == ',') {
+                    n1 = std::stoi(line.substr(0, i));
+                    n2 = std::stof(line.substr(i+1, line.size()-1));
+                    goals.push_back(std::make_pair(n1, n2));
+                    //std::cout << n1 << ", " << n2 << std::endl;
+                }
+            }
+        }
+    }
+
     //std::vector<std::pair<int, int>> goals = {std::make_pair(80, 38), std::make_pair(90, 35), std::make_pair(96, 14), std::make_pair(104, 12), std::make_pair(111, 31), std::make_pair(103, 38)};
-    std::vector<std::pair<int, int>> goals = {std::make_pair(90, 30), std::make_pair(96, 14), std::make_pair(104, 12), std::make_pair(111, 31), std::make_pair(103, 38)};
+    //std::vector<std::pair<int, int>> goals = {std::make_pair(90, 30), std::make_pair(96, 14), std::make_pair(104, 12), std::make_pair(111, 31), std::make_pair(103, 38)};
 
 
   // Load gazebo
@@ -41,6 +74,9 @@ int main(int _argc, char **_argv) {
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
   node->Init();
 
+
+  gazebo::transport::SubscriberPtr cameraSubscriber =
+    node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
 
   //gazebo::transport::SubscriberPtr toPoint =
   //        node->Subscribe("~/pose/info", &MoveToPoint::displayGoal, &testGoal);
@@ -122,17 +158,17 @@ int main(int _argc, char **_argv) {
 
     //std::cout << goal.distance << " : " << goal.angle << std::endl;
 
-    if (goal.distance < 1.2) {
+    if (goal.distance < 2.5) {
         testGoal.setGoal(goals[goalIndex].first, goals[goalIndex].second);
         if (++goalIndex == (int)goals.size()) {
           goalIndex = 0;
         }
     }
 
-    if (scan.distance2 < 2) {
+    if (scan.distance2 < 1.5) {
         obstacleOn = true;
     }
-    if (scan.distance2 > 3) {
+    if (scan.distance2 > 2) {
         obstacleOn = false;
     }
 

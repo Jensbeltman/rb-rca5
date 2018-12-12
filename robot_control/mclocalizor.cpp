@@ -156,9 +156,8 @@ void MCLocalizor::show()
     prettymap.at<Vec3b>(Point2f(tbel[0].x, tbel[0].y)*2) = Vec3b(0,0,255);
 
 
-    float phi = tbel[0].dir;
-
-    positions << apos.x << "," << -apos.y << "," << tbel[0].x - 0.56*cos(phi)<< "," << -(tbel[0].y - 0.56*sin(phi)) << std::endl;
+    //float phi = tbel[0].dir;
+    //positions << apos.x << "," << -apos.y << "," << tbel[0].x - 0.56*cos(phi)<< "," << -(tbel[0].y - 0.56*sin(phi)) << std::endl;
 
     //circle(m,Point(90,30),2,Scalar(0,255,0),-1);
     //circle(m,Point(90,30)*4,2,Scalar(0,255,0),-1);
@@ -217,6 +216,9 @@ void MCLocalizor::localize(LaserScan *ls)
         if (sel >= N_CONF) sel = N_CONF - 1;
         bel[i] = tbel[sel];
     }
+
+    float phi = tbel[0].dir;
+    positions << apos.x << "," << -apos.y << "," << tbel[0].x - 0.56*cos(phi)<< "," << -(tbel[0].y - 0.56*sin(phi)) << std::endl;
 }
 
 conf MCLocalizor::getConfiguration() {
