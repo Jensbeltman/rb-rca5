@@ -175,22 +175,22 @@ void MarbleUtility::findMarbles() {
   }
 
   float imgXmid = src.cols / 2;
-  float fl = 277.13;
+  float fl = 277.13 * 4;
 
   for (int i = 0; i < peeks.size(); i++) {
 	float *peek = peeks[i];
 	float mid_d = fabs(imgXmid - peek[0]);
+	float pr = (peek[1] / 2);
 
-	float theta = atan((peek[1] / 2) / sqrt(mid_d * mid_d + fl * fl));
-	float camDist = 0.5 / tan(theta);
+	float cAV = atan(mid_d / fl);
+	float cAH = atan(pr / (fl / cos(cAV)));
+	float cD = 0.5 / tan(cAH);
 
-	float camAngle = atan(mid_d / fl);
-
-	float b = camDist;
+	float b = cD;
 	float c = 0.2;
 	float bs = b * b;
 	float cs = c * c;
-	float A = M_PI - camAngle;
+	float A = M_PI - fabs(cAV);
 
 	float dist = sqrt(bs + cs - 2 * b * c * cos(A));
 	float a = dist;

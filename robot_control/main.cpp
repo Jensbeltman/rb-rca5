@@ -56,12 +56,13 @@ int main(int _argc, char **_argv) {
 
   int key = waitKey(1);
 
-  int dL = 3;
-  int dU = 50;
-  int aL = 20;
-  int aU = 70;
-  for (int d = dL; d <= dU; d += 1) {
-	for (int a = aL; a <= aU; a += 5) {
+  float dL = 3;
+  float dU = 50;
+  float aL = 20;
+  float aU = 70;
+
+  for (float d = dL; d <= dU; d += 0.5f) {
+	for (float a = aL; a <= aU; a += 2.5f) {
 	  cout << d << "," << a << endl;
 	  mUtil.distributeMarble(movePublisher, 0, (float)d, a * 0.0174532925);
 
