@@ -156,30 +156,31 @@ int main(int _argc, char **_argv) {
     distAndAngle goal = testGoal.leftToGoal(configuration.x/4, configuration.y/4, configuration.dir);
     closestLine scan = scanner.getClosestLine();
 
-    //std::cout << goal.distance << " : " << goal.angle << std::endl;
+    std::cout << "Goal distance: " << goal.distance << " Goal angle: " << goal.angle << ", ";
+    //std::cout << "Scan distance: " << scan.distance << " Scan angle: " << scan.angle*360/(2*M_PI) << ", ";
 
-    if (goal.distance < 2.5) {
+    if (goal.distance < 2) {
         testGoal.setGoal(goals[goalIndex].first, goals[goalIndex].second);
         if (++goalIndex == (int)goals.size()) {
           goalIndex = 0;
         }
     }
 
-    if (scan.distance2 < 1.5) {
+    if (scan.distance2 < 1) {
         obstacleOn = true;
     }
-    if (scan.distance2 > 2) {
+    if (scan.distance2 > 1.2) {
         obstacleOn = false;
     }
 
     if (obstacleOn) {
-        //std::cout << "O" << std::endl;
+        std::cout << "O" << std::endl;
         controller1.setValues(scan.distance, scan.angle);
         controller1.process();
         speed = controller1.getValues().speed;
         dir = controller1.getValues().direction;
     } else {
-        //std::cout << "G" << std::endl;
+        std::cout << "G" << std::endl;
         controller2.setValues(goal.distance, -goal.angle);
         controller2.process();
         speed = controller2.getValues().speed;

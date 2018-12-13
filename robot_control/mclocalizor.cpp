@@ -217,8 +217,20 @@ void MCLocalizor::localize(LaserScan *ls)
         bel[i] = tbel[sel];
     }
 
-    float phi = tbel[0].dir;
-    positions << apos.x << "," << -apos.y << "," << tbel[0].x - 0.56*cos(phi)<< "," << -(tbel[0].y - 0.56*sin(phi)) << std::endl;
+    float x = 0;
+    float y = 0;
+    float phi = 0;
+
+    for(int i = 0 ; i < 10; i++){
+        x += tbel[i].x;
+        y += tbel[i].y;
+        phi += tbel[i].dir;
+    }
+    x /= 10;
+    y /= 10;
+    phi /= 10;
+
+    positions << apos.x << "," << -apos.y << "," << x- 0.56*cos(phi)<< "," << -(y - 0.56*sin(phi)) << std::endl;
 }
 
 conf MCLocalizor::getConfiguration() {

@@ -44,7 +44,7 @@ void obstacle_avoidance::init_controller()
     Odist->addTerm(new Ramp("far", 1.5, 10));
     Odist->addTerm(new Triangle("close", 0.5, 1.2, 1.8));
     Odist->addTerm(new Triangle("veryclose", 0.2, 0.8, 1.2));
-    Odist->addTerm(new Ramp("tooclose", 0.5, 0.08));
+    Odist->addTerm(new Ramp("tooclose", 0.8, 0.08));
     engine->addInputVariable(Odist);
 
     //Inputvariable (direction):
@@ -93,7 +93,7 @@ void obstacle_avoidance::init_controller()
     speed->addTerm(new Ramp("fast", 0.7, 1.2));
     speed->addTerm(new Triangle("medium", 0.3, 0.5, 1));
     speed->addTerm(new Triangle("slow", 0, 0.3, 0.5));
-    speed->addTerm(new Ramp("backward", -1.2, 0));
+    speed->addTerm(new Ramp("backward", 0, -1.2));
     engine->addOutputVariable(speed);
 
     //Ruleblock:
@@ -109,13 +109,19 @@ void obstacle_avoidance::init_controller()
     mamdani->addRule(Rule::parse("if Odist is far then speed is fast", engine));
     mamdani->addRule(Rule::parse("if Odist is close then speed is medium", engine));
     mamdani->addRule(Rule::parse("if Odist is veryclose then speed is slow", engine));
-    mamdani->addRule(Rule::parse("if Odist is tooclose then speed is backward", engine));
+    mamdani->addRule(Rule::parse("if Odist is tooclose then speed is slow", engine));
 
     mamdani->addRule(Rule::parse("if Odist is far then Sdir is straight", engine));
     mamdani->addRule(Rule::parse("if Odir is right and Odist is veryclose then Sdir is hardleft", engine));
     mamdani->addRule(Rule::parse("if Odir is left and Odist is veryclose then Sdir is hardright", engine));
     mamdani->addRule(Rule::parse("if Odir is right and Odist is close then Sdir is left", engine));
     mamdani->addRule(Rule::parse("if Odir is left and Odist is close then Sdir is right", engine));
+
+    mamdani->addRule(Rule::parse("if Odir is right and Odist is tooclose then Sdir is hardleft", engine));
+    mamdani->addRule(Rule::parse("if Odir is left and Odist is tooclose then Sdir is hardright", engine));
+
+    mamdani->addRule(Rule::parse("if Odir is center and Odist is close then Sdir is right", engine));
+    mamdani->addRule(Rule::parse("if Odir is center and Odist is veryclose then Sdir is hardright", engine));
 
     engine->addRuleBlock(mamdani);
 
@@ -153,8 +159,8 @@ void fuzzy_goal::init_controller()
     goalDist->setEnabled(true);
     goalDist->setRange(0, 200);
     goalDist->setLockValueInRange(false);
-    goalDist->addTerm(new Ramp("far", 10, 200));
-    goalDist->addTerm(new Triangle("near", 1, 5, 15));
+    goalDist->addTerm(new Ramp("far", 5, 20));
+    goalDist->addTerm(new Triangle("near", 1, 3, 10));
     goalDist->addTerm(new Ramp("veryclose", 1.5, 0));
     engine->addInputVariable(goalDist);
 
@@ -166,7 +172,7 @@ void fuzzy_goal::init_controller()
     goalAngle->setRange(-PI, PI);
     goalAngle->setLockValueInRange(false);
     goalAngle->addTerm(new Ramp("hardleft", -PI/18, -PI));
-    goalAngle->addTerm(new Triangle("left", 0, -PI/18, -PI/12));
+    goalAngle->addTerm(new Triangle("left", -PI/12, -PI/18, 0));
     goalAngle->addTerm(new Triangle("center", -0.1, 0, 0.1));
     goalAngle->addTerm(new Triangle("right", 0, PI/18, PI/12));
     goalAngle->addTerm(new Ramp("hardright", PI/18, PI));
@@ -217,7 +223,13 @@ void fuzzy_goal::init_controller()
     mamdani->setImplication(new Minimum);
     mamdani->setActivation(new General);
 
-    mamdani->addRule(Rule::parse("if goalDist is far then speed is fast", engine));
+    mamdani->addRule(Rule::parse("if goalDist is far and goalAngle is hardright then speed is slow", engine));
+    mamdani->addRule(Rule::parse("if goalDist is far and goalAngle is hardleft then speed is slow", engine));
+
+    mamdani->addRule(Rule::parse("if goalDist is far and goalAngle is left then speed is fast", engine));
+    mamdani->addRule(Rule::parse("if goalDist is far and goalAngle is right then speed is fast", engine));
+    mamdani->addRule(Rule::parse("if goalDist is far and goalAngle is center then speed is fast", engine));
+
     mamdani->addRule(Rule::parse("if goalDist is near then speed is fast", engine));
     mamdani->addRule(Rule::parse("if goalDist is veryclose then speed is slow", engine));
 
