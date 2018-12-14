@@ -4,8 +4,8 @@ MCLocalizor::MCLocalizor(Mat m, uchar s)
 {
     scale = s;
 
-    int rows = m.rows;
-    int cols = m.cols;
+    rows = m.rows;
+    cols = m.cols;
 
     map = Mat(rows * scale, cols * scale, CV_8UC1); // redo this with cv resize
 
@@ -32,7 +32,7 @@ MCLocalizor::MCLocalizor(Mat m, uchar s)
         bel[i].dir = 0;
     }
 
-    positions.open("positions.txt");
+    positions.open("pos0.txt");
 }
 
 MCLocalizor::~MCLocalizor()
@@ -95,7 +95,7 @@ void MCLocalizor::localPoseCallback(ConstPosesStampedPtr &_msg)
     if (d_pl < -M_PI) d_pl += 2 * M_PI; // *
 
     const double l = 0.34 + 0.05;
-    const double r = 0.12;
+    const double r = 0.11;
 
     double vl = (2 * d_pl / dt) * r; // * Velocity of wheels
     double vr = (2 * d_pr / dt) * r; // *
@@ -134,6 +134,7 @@ void MCLocalizor::globalPoseCallback(ConstPosesStampedPtr &_msg)
                                  _msg->pose(i).orientation().z());
       }
     }
+    if(breset) reset();
 }
 
 void MCLocalizor::show()
@@ -146,14 +147,14 @@ void MCLocalizor::show()
       p*=2;
       arrowedLine(
           m, p,
-          p + Point2f(14 * cos(bel[i].dir), 14 * sin(bel[i].dir)),
+          p + Point2f(14 * cos(bel[i].dir), 12 * sin(bel[i].dir)),
           Scalar(120, 120, 255), 1, LINE_AA, 0, .5);
     }
     arrowedLine(m, apos*2, apos*2 + Point2f(10 * cos(aphi), 10 * sin(aphi)), Scalar(255, 0, 0), 1, LINE_AA, 0, .5);
 
     //circle(prettymap, Point2f(tbel[0].x, tbel[0].y)*2, 2, Vec3b(0,0,255), -1);
-    prettymap.at<Vec3b>(apos*2) = Vec3b(255,0,0);
-    prettymap.at<Vec3b>(Point2f(tbel[0].x, tbel[0].y)*2) = Vec3b(0,0,255);
+//    prettymap.at<Vec3b>(apos*2) = Vec3b(255,0,0);
+//    prettymap.at<Vec3b>(Point2f(tbel[0].x, tbel[0].y)*2) = Vec3b(0,0,255);
 
 
     //float phi = tbel[0].dir;
@@ -178,12 +179,17 @@ void MCLocalizor::tempBelief()
     y   = upos.y; upos.y = 0;
     phi = uphi;   uphi   = 0;
 
-    for(int i = 0; i < N_CONF; i++){
+    for(int i = 0; i < N_CONF - 1; i++){
         double tphi = fmod(bel[i].dir, 2*M_PI) ;
         tbel[i].x   = bel[i].x + (x*cos(tphi) + y*sin(tphi))*s * ndist(gen);
         tbel[i].y   = bel[i].y + (x*sin(tphi) + y*cos(tphi))*s * ndist(gen);
         tbel[i].dir = tphi + phi * ndist(gen);
     }
+    double tphi = fmod(bel[N_CONF-1].dir, 2*M_PI) ;
+    tbel[N_CONF-1].x   = bel[N_CONF-1].x + (x*cos(tphi) + y*sin(tphi))*s;
+    tbel[N_CONF-1].y   = bel[N_CONF-1].y + (x*sin(tphi) + y*cos(tphi))*s;
+    tbel[N_CONF-1].dir = tphi + phi;
+
 }
 
 bool conf_sorter(conf const &lhs, conf const &rhs) {
@@ -211,11 +217,13 @@ void MCLocalizor::localize(LaserScan *ls)
 
     std::sort(tbel.begin(), tbel.end(), &conf_sorter);
 
-    for(int i = 0; i < N_CONF; i++){
+    for(int i = 0; i < N_CONF -1; i++){
         int sel = std::abs(ndist_conf(gen));
         if (sel >= N_CONF) sel = N_CONF - 1;
         bel[i] = tbel[sel];
     }
+
+    bel[N_CONF-1] = tbel[N_CONF-1];
 
     float x = 0;
     float y = 0;
@@ -230,9 +238,37 @@ void MCLocalizor::localize(LaserScan *ls)
     y /= 10;
     phi /= 10;
 
-    positions << apos.x << "," << -apos.y << "," << x- 0.56*cos(phi)<< "," << -(y - 0.56*sin(phi)) << std::endl;
+    prettymap.at<Vec3b>(apos*2) = Vec3b(255,0,0);
+    prettymap.at<Vec3b>(Point2f(x- 0.56*cos(phi)+0.56, y - 0.56*sin(phi)+0.56)*2) = Vec3b(0,0,255);
+    if(bel[N_CONF-1].x < 480 && bel[N_CONF-1].x >= 0 && bel[N_CONF-1].y < 320 && bel[N_CONF-1].y >=0)
+    prettymap.at<Vec3b>(Point2f(bel[N_CONF-1].x, bel[N_CONF-1].y)*2) = Vec3b(0,255,0);
+
+//    positions << apos.x << "," << -apos.y << "," << x- 0.56*cos(phi)<< "," << -(y - 0.56*sin(phi))
+//              << "," << bel[N_CONF-1].x << "," << bel[N_CONF-1].y << std::endl;
+    positions << apos.x << "," << -apos.y << "," << x- 0.56*cos(phi)+0.56<< "," << -(y - 0.56*sin(phi))-0.56
+              << "," << bel[N_CONF-1].x + 0.56<< "," << -bel[N_CONF-1].y-0.56 << std::endl;
 }
 
 conf MCLocalizor::getConfiguration() {
     return tbel[0];
+}
+
+void MCLocalizor::reset()
+{
+    for(int i = 0; i < N_CONF; i++){
+        bel[i].x = apos.x;
+        bel[i].y = apos.y;
+        bel[i].dir = aphi;
+    }
+    upos.x = 0;
+    upos.y = 0;
+    uphi = 0;
+    breset = false;
+}
+
+void MCLocalizor::qreset()
+{
+    breset = true;
+    positions.close();
+    positions.open("pos" + std::to_string(nfile++) + ".txt");
 }

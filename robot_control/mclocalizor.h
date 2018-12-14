@@ -8,7 +8,7 @@
 #include "laserscanner.h"
 #include <fstream>
 
-#define N_CONF 80
+#define N_CONF 40
 
 using namespace cv;
 
@@ -36,10 +36,17 @@ public:
     void show();
 
     conf getConfiguration();
+    void reset();
+
+    void qreset();
 
 
 private:
     float s = ((72.0 / 25.4) * 2);
+    int rows;
+    int cols;
+
+    bool breset = false;
 
     std::mutex * _ptex = new std::mutex();
     std::mutex * _btex = new std::mutex();
@@ -57,7 +64,7 @@ private:
     LaserScanner laserScanner;
 
     std::default_random_engine gen;
-    std::normal_distribution<float> ndist = std::normal_distribution<float>(1.0, 0.5);
+    std::normal_distribution<float> ndist = std::normal_distribution<float>(1.0, 0.3);
     std::normal_distribution<float>   ndist_conf = std::normal_distribution<float> (0,N_CONF/3);
 
     float t = -1;
@@ -72,6 +79,7 @@ private:
     void localize(LaserScan *ls);
 
     std::ofstream positions;
+    int nfile = 0;
 };
 
 #endif // MCLOCALIZER_H
