@@ -56,24 +56,61 @@ int main(int _argc, char **_argv) {
 
   int key = waitKey(1);
 
-  float dL = 3;
-  float dU = 50;
-  float aL = 20;
-  float aU = 70;
+  mUtil.distributeMarble(movePublisher, 0, (float)3.0, 27 * 0.0174532925);
+  mUtil.distributeMarble(movePublisher, 1, (float)20.0, 45 * 0.0174532925);
+  mUtil.distributeMarble(movePublisher, 2, (float)20.0, 47 * 0.0174532925);
+  mUtil.newData = true;
 
-  for (float d = dL; d <= dU; d += 0.5f) {
-	for (float a = aL; a <= aU; a += 2.5f) {
-	  cout << d << "," << a << endl;
-	  mUtil.distributeMarble(movePublisher, 0, (float)d, a * 0.0174532925);
+  waitKey(200);
+  mUtil.findMarbles();
+  // Check if image is loaded fine
+  Mat src = mUtil.src.clone();
 
-	  mUtil.newData = false;
-	  // gazebo::common::Time::MSleep(100);
-	  while (mUtil.newData == false) {
-		;
-	  }
-	  mUtil.findMarbles();
-	}
+  Mat gray;
+  cvtColor(src, gray, COLOR_BGR2GRAY);
+  medianBlur(gray, gray, 5);
+  vector<Vec3f> circles;
+  HoughCircles(gray, circles, HOUGH_GRADIENT, 1,
+			   16,            // change this value to detect circles with
+							  // different distances to each other
+			   100, 20, 0, 0  // change the last two parameters
+			   // (min_radius & max_radius) to detect larger circles
+  );
+  for (size_t i = 0; i < circles.size(); i++) {
+	Vec3i c = circles[i];
+	Point center = Point(c[0], c[1]);
+	// circle center
+	circle(src, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
+	// circle outline
+	int radius = c[2];
+	circle(src, center, radius, Scalar(255, 0, 255), 3, LINE_AA);
   }
+  imshow("test", src);
+
+  imwrite("houglExample.png", src);
+  imwrite("customExample.png", mUtil.display);
+  while (true) {
+	waitKey(1);
+  }
+
+  //  float dL = 3;
+  //  float dU = 50;
+  //  float aL = 20;
+  //  float aU = 70;
+
+  //  for (float d = dL; d <= dU; d += 0.5f) {
+  //	for (float a = aL; a <= aU; a += 2.5f) {
+  //	  cout << d << "," << a << endl;
+  //	  mUtil.distributeMarble(movePublisher, 0, (float)d, a * 0.0174532925);
+
+  //	  mUtil.newData = false;
+  //	  // gazebo::common::Time::MSleep(100);
+  //	  while (mUtil.newData == false) {
+  //		;
+  //	  }
+  //	  mUtil.findMarbles();
+  //	}
+  //  }
 
   // Make sure to shut everything down.
   gazebo::client::shutdown();

@@ -175,7 +175,7 @@ void MarbleUtility::findMarbles() {
   }
 
   float imgXmid = src.cols / 2;
-  float fl = 277.13 * 4;
+  float fl = 277.13;
 
   for (int i = 0; i < peeks.size(); i++) {
 	float *peek = peeks[i];
@@ -201,21 +201,20 @@ void MarbleUtility::findMarbles() {
 	else
 	  ang = ro - safeAcos((cs + as - bs) / (2 * a * c));
 
-	// cout << "Angle is " << ang * 57.2957795 << end1l;
+	cout << "Angle is " << ang * 57.2957795 << endl;
+	cout << "Dist is " << dist << endl;
 	ostringstream ss;
 	ss << dist;
 	string s(ss.str());
-	putText(display, s, Point(peek[0], display.rows / 2), FONT_HERSHEY_SIMPLEX,
-			0.5, Scalar(0, 0, 255), 1, LINE_AA);
+	// putText(display, s, Point(peek[0], display.rows / 2),
+	// FONT_HERSHEY_SIMPLEX,
+	//			0.5, Scalar(0, 0, 255), 1, LINE_AA);
 
 	Marble m;
 	m.name = "detected_marble_" + to_string(i);
 
 	m.pose[0] = rx + cos(ang) * dist;
 	m.pose[1] = ry + sin(ang) * dist;
-	if (marble[0].robotDistance == 21 && marble[0].robotAngle > 0.6) {
-	  int test = 1;
-	}
 
 	//	cout << "DPose " << i << " is " << m.pose[0] << " " << m.pose[1] <<
 	// endl; 	cout << "Diff is "
