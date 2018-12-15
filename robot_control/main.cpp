@@ -19,6 +19,8 @@ MarbleUtility mUtil;
 void statCallback(ConstWorldStatisticsPtr &_msg) { (void)_msg; }
 
 int main(int _argc, char **_argv) {
+  int mode;
+  cin >> mode;
   gazebo::client::setup(_argc, _argv);
 
   // Create our node for communication
@@ -44,37 +46,57 @@ int main(int _argc, char **_argv) {
   worldPublisher->WaitForConnection();
   worldPublisher->Publish(controlMessage);
 
-  int test = 0;
+  if (mode == 1) {
+	int test = 0;
 
-  const int key_left = 81;
-  const int key_up = 82;
-  const int key_down = 84;
-  const int key_right = 83;
-  const int key_esc = 27;
+	const int key_left = 81;
+	const int key_up = 82;
+	const int key_down = 84;
+	const int key_right = 83;
+	const int key_esc = 27;
 
-  gazebo::common::Time::MSleep(10);
+	gazebo::common::Time::MSleep(10);
 
-  int key = waitKey(1);
+	int key = waitKey(1);
 
-  float dL = 3;
-  float dU = 50;
-  float aL = 20;
-  float aU = 70;
+	float dL = 3;
+	float dU = 50;
+	float aL = 20;
+	float aU = 70;
 
-  for (float d = dL; d <= dU; d += 0.5f) {
-	for (float a = aL; a <= aU; a += 2.5f) {
-	  cout << d << "," << a << endl;
-	  mUtil.distributeMarble(movePublisher, 0, (float)d, a * 0.0174532925);
+	for (float d = dL; d <= dU; d += 0.5f) {
+	  for (float a = aL; a <= aU; a += 2.5f) {
+		cout << d << "," << a << endl;
+		mUtil.distributeMarble(movePublisher, 0, (float)d, a * 0.0174532925);
 
-	  mUtil.newData = false;
-	  // gazebo::common::Time::MSleep(100);
-	  while (mUtil.newData == false) {
-		;
+		mUtil.newData = false;
+		// gazebo::common::Time::MSleep(100);
+		while (mUtil.newData == false) {
+		  ;
+		}
+		mUtil.findMarbles();
 	  }
-	  mUtil.findMarbles();
 	}
   }
 
-  // Make sure to shut everything down.
-  gazebo::client::shutdown();
-}
+  if (mode == 2) {
+	while (test < mUtil.numberOfTests) {
+	  //		  mutexx.lock();
+	  //		  int key = waitKey(2);
+	  //		  mutexx.unlock();
+	  //  int key = waitKey(1);
+	  if (key == key_esc) break;
+	  if (key == key_right) {
+		mUtil.distributeMarbles(movePublisher);
+		mUtil.newData = false;
+		while (mUtil.newData == false) {
+		  ;
+		}
+		mUtil.findMarbles();
+		test++;
+	  }
+	}
+
+	// Make sure to shut everything down.
+	gazebo::client::shutdown();
+  }

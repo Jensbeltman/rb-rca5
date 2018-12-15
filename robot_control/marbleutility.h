@@ -62,7 +62,7 @@ class MarbleUtility {
   vector<pair<Marble *, Marble *>> pairs;
   float meanSquareError;
 
-  int numberOfMarbles, numberOfTests, angRange;
+  int numberOfMarbles = 3, numberOfTests = 100, angRange;
   int distL, distU;
 };
 

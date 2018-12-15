@@ -223,11 +223,28 @@ void MarbleUtility::findMarbles() {
 	//				 pow(m.pose[1] - marble[0].pose[1], 2))
 	//		 << endl;
 
-	marbleData << marble[0].pose[0] << "," << marble[0].pose[1] << ","
-			   << marble[0].robotDistance << "," << marble[0].robotAngle << ","
-			   << m.pose[0] << "," << m.pose[1] << "," << dist << "," << ang
-			   << "\n";
+	if (mode == 1) {
+	  marbleData << marble[0].pose[0] << "," << marble[0].pose[1] << ","
+				 << marble[0].robotDistance << "," << marble[0].robotAngle
+				 << "," << m.pose[0] << "," << m.pose[1] << "," << dist << ","
+				 << ang << "\n";
+	}
+	if (mode == 2) {
+	  vector<Marble> tempM = marble;
+	  tempM.resize(numberOfMarbles);
+	  Marble bestFit;
+	  float bestval = 9999999;
+	  for (int j = 0; j < numberOfMarbles; j++) {
+		int newval = sqrt(pow(marble[j].robotAngle - ang, 2) +
+						  pow(marble[j].robotDistance - dist, 2));
+		if (newval < bestval) bestval = newval;
+	  }
 
+	  marbleData << bestFit.pose[0] << "," << bestFit.pose[1] << ","
+				 << bestFit.robotDistance << "," << bestFit.robotAngle << ","
+				 << m.pose[0] << "," << m.pose[1] << "," << dist << "," << ang
+				 << "\n";
+	}
 	detectedMarble.push_back(m);
   }
   imshow("display", display);
@@ -273,6 +290,12 @@ float MarbleUtility::distance(Marble a, Marble b) {
 float MarbleUtility::distance(Marble *a, Marble *b) {
   return sqrt(pow(a->pose[0] - b->pose[0], 2) +
 			  pow(a->pose[1] - b->pose[1], 2));
+}
+
+bool MarbleUtility::marbleAng(const Marble &a, const Marble &b) {
+  Marble aa = a.robotAngle;
+  Marble ba = b.robotAngle;
+  return aa.robotAngle < ba.robotAngle;
 }
 
 bool MarbleUtility::pairDist(const pair<Marble *, Marble *> &a,

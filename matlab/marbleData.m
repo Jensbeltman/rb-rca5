@@ -1,6 +1,6 @@
 %data=csvread('/home/jens/UNI/project/rb-rca5/build-robot_control-Desktop-Debug/marbleData.txt');
-%data=csvread('marbleData320x240.txt');
-data=csvread('marbleData1280x960.txt');
+data=csvread('marbleData320x240.txt');
+%data=csvread('marbleData1280x960.txt');
 mx=data(:,1);
 my=data(:,2);
 md=data(:,3);
