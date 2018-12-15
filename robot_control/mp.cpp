@@ -435,22 +435,25 @@ void MP::drawRect(Mat m) {
 			  Scalar(rand() % 235 + 20, rand() % 235 + 20, rand() % 235 + 20),
 			  FILLED);
   }
-  for (int i = 0; i < area.size() - 1; i++) {
-	Rect a = area[i];
-	for (int j = i + 1; j < area.size(); j++) {
-	  Rect b = area[j];
-	  if (a.x + a.width == b.x && a.y + a.height > b.y &&
-			  b.y + b.height > a.y ||
-		  b.x + b.width == a.x && a.y + a.height > b.y &&
-			  b.y + b.height > a.y ||
-		  a.y + a.height == b.y && a.x + a.width > b.x && b.x + b.width > a.x ||
-		  b.y + b.height == a.y && a.x + a.width > b.x && b.x + b.width > a.x) {
-		line(m, Point(a.x + a.width / 2, a.y + a.height / 2),
-			 Point(b.x + b.width / 2, b.y + b.height / 2), Scalar(255, 0, 0), 1,
-			 LINE_8);
-	  }
-	}
-  }
+  //  for (int i = 0; i < area.size() - 1; i++) {
+  //	Rect a = area[i];
+  //	for (int j = i + 1; j < area.size(); j++) {
+  //	  Rect b = area[j];
+  //	  if (a.x + a.width == b.x && a.y + a.height > b.y &&
+  //			  b.y + b.height > a.y ||
+  //		  b.x + b.width == a.x && a.y + a.height > b.y &&
+  //			  b.y + b.height > a.y ||
+  //		  a.y + a.height == b.y && a.x + a.width > b.x && b.x + b.width
+  //>
+  // a.x || 		  b.y + b.height == a.y && a.x + a.width > b.x && b.x +
+  // b.width > a.x)
+  //{ 		line(m, Point(a.x + a.width / 2, a.y + a.height / 2),
+  // Point(b.x + b.width
+  /// 2, b.y + b.height / 2), Scalar(255, 0, 0), 1, LINE_8);
+  //	  }
+  //	}
+  //  }
+  imwrite(name + "_RectangularDecomposition.png", m);
   imshow("rectmap", m);
 }
 
