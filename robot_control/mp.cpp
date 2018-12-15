@@ -145,7 +145,7 @@ void MP::genVisPoints(Mat bitmap, Mat& vMap, vector<segment_type>& lines,
 
   Mat jointVis;
   Mat tempVis = vMask[0].clone();
-  newPoints.push_back(tempPoints[0]);
+  pts.push_back(tempVisPoly[0].first);
   float bitMapSum = sumC1(bitmap);
   float jsum;
   int points = 0;
@@ -206,19 +206,23 @@ void MP::genVisPoints(Mat bitmap, Mat& vMap, vector<segment_type>& lines,
 	  if (coverage > cov_thresh) break;
 	  vector<Point> approxPoly;
 	  approxPolyDP(contVis[i].second, approxPoly, 4, false);
-	  if (isContourConvex(approxPoly)) {
+	  if (isContourConvex(approxPoly) || true) {
+		waitKey();
 		drawPoly2(tempVis, contVis[i].second, Scalar(255));
 		bitwise_and(bitmap, tempVis, tempVis);
 		coverage = sumC1(tempVis) / bitMapSum;
 		pts.push_back(contVis[i].first);
 		points++;
-		waitKey();
+
 		imshow("testmap2", tempVis);
 	  }
 	}
   }
 
   temp = tempVis.clone();
+  cvtColor(temp, temp, COLOR_GRAY2BGR);
+  for (int i = 0; i < pts.size(); i++)
+	temp.at<Vec3b>(pts[i]) = Vec3b(0, 255, 0);
   imwrite(name + "_ThreshHoldpercentVisionP.png", temp);
 
   cout << "In generating vision Point for " + name << endl;
