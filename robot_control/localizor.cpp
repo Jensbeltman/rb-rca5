@@ -30,9 +30,10 @@ void Localizor::poseCallback(ConstPosesStampedPtr &_msg) {
 }
 
 void Localizor::printPose() {
-  cout << fixed << "X: " << setw(5) << x << ", Y: " << setw(5) << y
-	   << ", phi: " << setw(5) << phi << "error: " << setw(5) << rx - x << ", "
-	   << setw(5) << ry - y << endl;
+  //  cout << fixed << "X: " << setw(5) << x << ", Y: " << setw(5) << y
+  //	   << ", phi: " << setw(5) << phi << "error: " << setw(5) << rx - x <<
+  //", "
+  //	   << setw(5) << ry - y << endl;
 }
 
 double Localizor::getX() { return mx; }

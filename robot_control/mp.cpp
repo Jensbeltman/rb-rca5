@@ -122,7 +122,12 @@ void MP::genVisPoints(Mat bitmap, Mat& vMap, vector<segment_type>& lines,
   vector<Point> tempPoints;
   vector<pair<Point, vector<Point>>> tempVisPoly;
   localMaxima(vMap, tempPoints, true, 3, 3);
-  imshow("map", vMap);
+  Mat temp = display.clone();
+  for (int i = 0; i < tempPoints.size(); i++)
+	temp.at<Vec3b>(tempPoints[i]) = Vec3b(0, 255, 0);
+  imwrite(name + "Maxima_Vmap.png", temp);
+
+  imshow("map", temp);
 
   genVisPoly(lines, tempPoints, tempVisPoly);
 
@@ -158,6 +163,11 @@ void MP::genVisPoints(Mat bitmap, Mat& vMap, vector<segment_type>& lines,
 	imshow("testmap", jointVis);
 	imshow("testmap2", tempVis);
   }
+  temp = tempVis.clone();
+  cvtColor(temp, temp, COLOR_GRAY2BGR);
+  for (int i = 0; i < pts.size(); i++)
+	temp.at<Vec3b>(pts[i]) = Vec3b(0, 255, 0);
+  imwrite(name + "_10percentVisionP.png", temp);
   coverage = sumC1(tempVis) / bitMapSum;
   if (coverage < cov_thresh) {
 	Moments Mo;
@@ -167,8 +177,6 @@ void MP::genVisPoints(Mat bitmap, Mat& vMap, vector<segment_type>& lines,
 
 	ttempVis = 255 - ttempVis;
 	bitwise_and(ttempVis, bitmap, ttempVis);
-	// erode(ttempVis, ttempVis, getStructuringElement(MORPH_ELLIPSE, Size(3,
-	// 3)));
 
 	imshow("testmap", ttempVis);
 	findContours(ttempVis, cont, RETR_TREE, CHAIN_APPROX_SIMPLE);
@@ -209,6 +217,10 @@ void MP::genVisPoints(Mat bitmap, Mat& vMap, vector<segment_type>& lines,
 	  }
 	}
   }
+
+  temp = tempVis.clone();
+  imwrite(name + "_ThreshHoldpercentVisionP.png", temp);
+
   cout << "In generating vision Point for " + name << endl;
   cout << points + 1 << "/" << tempPoints.size() << " points where drawn";
   cout << coverage << " total coverage" << endl;
@@ -320,8 +332,6 @@ void MP::localMaxima(const Mat image, vector<Point>& pts, bool remove_plateaus,
 	compare(image, non_plateau_mask, non_plateau_mask, cv::CMP_GT);
 	bitwise_and(mask, non_plateau_mask, mask);
   }
-
-  imshow("mask", mask);
 
   mask.convertTo(mask, CV_8SC1);
   for (int x = 0; x < mask.cols; x++) {
@@ -435,6 +445,7 @@ void MP::drawRect(Mat m) {
 			  Scalar(rand() % 235 + 20, rand() % 235 + 20, rand() % 235 + 20),
 			  FILLED);
   }
+  imwrite(name + "_RectangularDecomposition.png", m);
   //  for (int i = 0; i < area.size() - 1; i++) {
   //	Rect a = area[i];
   //	for (int j = i + 1; j < area.size(); j++) {
@@ -453,8 +464,90 @@ void MP::drawRect(Mat m) {
   //	  }
   //	}
   //  }
-  imwrite(name + "_RectangularDecomposition.png", m);
-  imshow("rectmap", m);
+
+  for (auto a = area.end(); a != area.begin(); a--) {
+	bool conc = false;
+	int n = 0;
+	for (int j = 0; j < area.size(); j++) {
+	  Rect b = area[j];
+	  if (a->x + a->width == b.x && a->y + a->height > b.y &&
+			  b.y + b.height > a->y ||
+		  b.x + b.width == a->x && a->y + a->height > b.y &&
+			  b.y + b.height > a->y ||
+		  a->y + a->height == b.y && a->x + a->width > b.x &&
+			  b.x + b.width > a->x ||
+		  b.y + b.height == a->y && a->x + a->width > b.x &&
+			  b.x + b.width > a->x) {
+		Point ints;
+		int xmin = min(a->x + a->width - 1, b.x + b.width);
+		int xmax = max(a->x, b.x);
+		ints.x = xmax + (xmin - xmax) / 2;
+
+		int ymin = min(a->y + a->height - 1, b.y + b.height);
+		int ymax = max(a->y, b.y);
+		ints.y = ymax + (ymin - ymax) / 2;
+
+		if (a->height == 4 && a->x >= b.x && a->x + a->width <= b.x + b.width &&
+			ints.x >= b.x && ints.x < b.x + b.width)
+		  conc = true;
+		if (a->width == 4 && a->y >= b.y &&
+			a->y + a->height <= b.y + b.height && ints.y >= b.y &&
+			ints.y < b.y + b.height)
+		  conc = true;
+		n++;
+	  }
+	}
+	if (n == 1 && conc) {
+	  a = area.erase(a);
+	}
+  }
+  Mat m2;
+  resize(m, m2, Size(), 4, 4, INTER_NEAREST);
+  for (int i = area.size(); i > 0; i--) {
+	Rect a = area[i];
+	vector<array<Point, 3>> connections;
+	bool conc = false;
+	for (int j = i - 1; j >= 0; j--) {
+	  Rect b = area[j];
+	  if (a.x + a.width == b.x && a.y + a.height > b.y &&
+			  b.y + b.height > a.y ||
+		  b.x + b.width == a.x && a.y + a.height > b.y &&
+			  b.y + b.height > a.y ||
+		  a.y + a.height == b.y && a.x + a.width > b.x && b.x + b.width > a.x ||
+		  b.y + b.height == a.y && a.x + a.width > b.x && b.x + b.width > a.x) {
+		Point ints;
+		int xmin = min(a.x + a.width - 1, b.x + b.width);
+		int xmax = max(a.x, b.x);
+		ints.x = xmax + (xmin - xmax) / 2;
+
+		int ymin = min(a.y + a.height - 1, b.y + b.height);
+		int ymax = max(a.y, b.y);
+		ints.y = ymax + (ymin - ymax) / 2;
+
+		// if(a.height == 4 && a.x >= b.x && a.x + a.width  <= b.x + b.width  &&
+		// ints.x >= b.x && ints.x < b.x + b.width  ) conc = true; if(a.width ==
+		// 4 && a.y >= b.y && a.y + a.height <= b.y + b.height && ints.y >= b.y
+		// && ints.y < b.y + b.height ) conc = true;
+
+		array<Point, 3> con = {Point(a.x + a.width / 2, a.y + a.height / 2),
+							   ints,
+							   Point(b.x + b.width / 2, b.y + b.height / 2)};
+		connections.push_back(con);
+	  }
+	}
+
+	if (connections.size() == 1 && !conc || connections.size() > 1) {
+	  for (int i = 0; i < connections.size(); i++) {
+		line(m2, connections[i][0] * 16, connections[i][1] * 16,
+			 Scalar(255, 0, 0), 1, LINE_AA, 2);
+		line(m2, connections[i][2] * 16, connections[i][1] * 16,
+			 Scalar(255, 0, 0), 1, LINE_AA, 2);
+	  }
+	}
+  }
+  imwrite(name + "_RectangularDecompositionGraph.png", m2);
+
+  imshow("rectmap", m2);
 }
 
 bool MP::mostVision(const pair<Point, vector<Point>>& a,
