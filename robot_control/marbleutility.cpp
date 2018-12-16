@@ -45,12 +45,13 @@ void MarbleUtility::cameraCallback(ConstImageStampedPtr &msg) {
 	src_hls = im_hls.clone();
 	src_hls_channels = im_hls_channels;
 	display = im.clone();
-	int threshold = 10;
+	int threshold = 1;
 
 	if (ssum[0] > threshold) newData = true;
   }
 
   imshow("live", src);
+  waitKey(1);
 }
 
 void MarbleUtility::getDistrParam() {
@@ -74,7 +75,7 @@ void MarbleUtility::getDistrParam() {
 void MarbleUtility::distributeMarbles(
 	gazebo::transport::PublisherPtr movePublisher) {
   gazebo::msgs::Pose msg;
-  for (int i = 0; i < marble.size(); i++) {
+  for (int i = 0; i < 3; i++) {
 	marble[i].robotDistance = static_cast<float>(
 		distL + rand() / (RAND_MAX / (float)(distU - distL)));
 
@@ -175,7 +176,7 @@ void MarbleUtility::findMarbles() {
   }
 
   float imgXmid = src.cols / 2;
-  float fl = 277.13 * 4;
+  float fl = 277.13;
 
   for (int i = 0; i < peeks.size(); i++) {
 	float *peek = peeks[i];
@@ -223,27 +224,29 @@ void MarbleUtility::findMarbles() {
 	//				 pow(m.pose[1] - marble[0].pose[1], 2))
 	//		 << endl;
 
+	int bestI = 0;
+	int val;
+	int bestVal = 99999;
+	if (mode == 2) {
+	  for (int i = 0; i < 3; i++) {
+		int val = sqrt(pow(marble[i].pose[0] - m.pose[0], 2) +
+					   pow(marble[i].pose[1] - m.pose[1], 2));
+		if (val < bestVal) {
+		  bestVal = val;
+		  bestI = i;
+		}
+	  }
+	  marbleData << marble[bestI].pose[0] << "," << marble[bestI].pose[1] << ","
+				 << marble[bestI].robotDistance << ","
+				 << marble[bestI].robotAngle << "," << m.pose[0] << ","
+				 << m.pose[1] << "," << dist << "," << ang << "\n";
+	}
+
 	if (mode == 1) {
 	  marbleData << marble[0].pose[0] << "," << marble[0].pose[1] << ","
 				 << marble[0].robotDistance << "," << marble[0].robotAngle
 				 << "," << m.pose[0] << "," << m.pose[1] << "," << dist << ","
 				 << ang << "\n";
-	}
-	if (mode == 2) {
-	  vector<Marble> tempM = marble;
-	  tempM.resize(numberOfMarbles);
-	  Marble bestFit;
-	  float bestval = 9999999;
-	  for (int j = 0; j < numberOfMarbles; j++) {
-		int newval = sqrt(pow(marble[j].robotAngle - ang, 2) +
-						  pow(marble[j].robotDistance - dist, 2));
-		if (newval < bestval) bestval = newval;
-	  }
-
-	  marbleData << bestFit.pose[0] << "," << bestFit.pose[1] << ","
-				 << bestFit.robotDistance << "," << bestFit.robotAngle << ","
-				 << m.pose[0] << "," << m.pose[1] << "," << dist << "," << ang
-				 << "\n";
 	}
 	detectedMarble.push_back(m);
   }
@@ -290,12 +293,6 @@ float MarbleUtility::distance(Marble a, Marble b) {
 float MarbleUtility::distance(Marble *a, Marble *b) {
   return sqrt(pow(a->pose[0] - b->pose[0], 2) +
 			  pow(a->pose[1] - b->pose[1], 2));
-}
-
-bool MarbleUtility::marbleAng(const Marble &a, const Marble &b) {
-  Marble aa = a.robotAngle;
-  Marble ba = b.robotAngle;
-  return aa.robotAngle < ba.robotAngle;
 }
 
 bool MarbleUtility::pairDist(const pair<Marble *, Marble *> &a,

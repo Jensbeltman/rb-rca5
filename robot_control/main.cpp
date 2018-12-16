@@ -19,8 +19,8 @@ MarbleUtility mUtil;
 void statCallback(ConstWorldStatisticsPtr &_msg) { (void)_msg; }
 
 int main(int _argc, char **_argv) {
-  int mode;
-  cin >> mode;
+  cout << "enter test mode: " << endl;
+  cin >> mUtil.mode;
   gazebo::client::setup(_argc, _argv);
 
   // Create our node for communication
@@ -46,7 +46,8 @@ int main(int _argc, char **_argv) {
   worldPublisher->WaitForConnection();
   worldPublisher->Publish(controlMessage);
 
-  if (mode == 1) {
+  //--------test1----- single marble
+  if (mUtil.mode == 1) {
 	int test = 0;
 
 	const int key_left = 81;
@@ -79,24 +80,26 @@ int main(int _argc, char **_argv) {
 	}
   }
 
-  if (mode == 2) {
-	while (test < mUtil.numberOfTests) {
-	  //		  mutexx.lock();
-	  //		  int key = waitKey(2);
-	  //		  mutexx.unlock();
-	  //  int key = waitKey(1);
-	  if (key == key_esc) break;
-	  if (key == key_right) {
-		mUtil.distributeMarbles(movePublisher);
-		mUtil.newData = false;
-		while (mUtil.newData == false) {
-		  ;
-		}
-		mUtil.findMarbles();
-		test++;
-	  }
-	}
+  // test2------multimarble
+  if (mUtil.mode == 2) {
+	gazebo::common::Time::MSleep(10);
 
-	// Make sure to shut everything down.
-	gazebo::client::shutdown();
+	int key = waitKey(1);
+
+	int test = 0;
+	while (test < mUtil.numberOfTests) {
+	  cout << "Test Nr.: " << test << endl;
+	  mUtil.distributeMarbles(movePublisher);
+	  mUtil.newData = false;
+	  while (mUtil.newData == false) {
+		;
+	  }
+	  mUtil.findMarbles();
+
+	  test++;
+	}
   }
+
+  // Make sure to shut everything down.
+  gazebo::client::shutdown();
+}

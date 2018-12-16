@@ -62,8 +62,9 @@ class MarbleUtility {
   vector<pair<Marble *, Marble *>> pairs;
   float meanSquareError;
 
-  int numberOfMarbles = 3, numberOfTests = 100, angRange;
-  int distL, distU;
+  int mode;
+  int numberOfMarbles = 3, numberOfTests = 1000, angRange;
+  float distL = 3, distU = 9.5;
 };
 
 #endif  // MARBLEUTILITY_H
