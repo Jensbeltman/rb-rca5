@@ -142,7 +142,7 @@ void MCLocalizor::show()
     Mat m = prettymap.clone();
 
     //cvtColor(prettymap, m, COLOR_GRAY2BGR);
-    for(int i = 0; i < N_CONF; i++){
+    for(int i = 0; i < N_CONF-1; i++){
       Point2f p(bel[i].x,bel[i].y);
       p*=2;
       arrowedLine(
@@ -198,7 +198,7 @@ bool conf_sorter(conf const &lhs, conf const &rhs) {
 
 void MCLocalizor::calcWeights(LaserScan *ls)
 {
-    for(int i = 0; i < N_CONF; i++){
+    for(int i = 0; i < N_CONF-1; i++){
         Point2f p(tbel[i].x,tbel[i].y);
         LaserScan *gls = laserScanner.generateScan(map, p, tbel[i].dir);
         float score = 0;
@@ -219,7 +219,7 @@ void MCLocalizor::localize(LaserScan *ls)
 
     for(int i = 0; i < N_CONF -1; i++){
         int sel = std::abs(ndist_conf(gen));
-        if (sel >= N_CONF) sel = N_CONF - 1;
+        if (sel >= N_CONF-1) sel = N_CONF - 2;
         bel[i] = tbel[sel];
     }
 
@@ -240,13 +240,18 @@ void MCLocalizor::localize(LaserScan *ls)
 
     prettymap.at<Vec3b>(apos*2) = Vec3b(255,0,0);
     prettymap.at<Vec3b>(Point2f(x- 0.56*cos(phi)+0.56, y - 0.56*sin(phi)+0.56)*2) = Vec3b(0,0,255);
-    if(bel[N_CONF-1].x < 480 && bel[N_CONF-1].x >= 0 && bel[N_CONF-1].y < 320 && bel[N_CONF-1].y >=0)
-    prettymap.at<Vec3b>(Point2f(bel[N_CONF-1].x, bel[N_CONF-1].y)*2) = Vec3b(0,255,0);
+    //if(bel[N_CONF-1].x < 480 && bel[N_CONF-1].x >= 0 && bel[N_CONF-1].y < 320 && bel[N_CONF-1].y >=0)
+    //prettymap.at<Vec3b>(Point2f(bel[N_CONF-1].x, bel[N_CONF-1].y)*2) = Vec3b(0,255,0);
 
 //    positions << apos.x << "," << -apos.y << "," << x- 0.56*cos(phi)<< "," << -(y - 0.56*sin(phi))
 //              << "," << bel[N_CONF-1].x << "," << bel[N_CONF-1].y << std::endl;
-    positions << apos.x << "," << -apos.y << "," << x- 0.56*cos(phi)+0.56<< "," << -(y - 0.56*sin(phi))-0.56
-              << "," << bel[N_CONF-1].x + 0.56<< "," << -bel[N_CONF-1].y-0.56 << std::endl;
+        //if (skipPrint)
+        //    skipPrint = false;
+        //else {
+        //    skipPrint = true;
+    positions << apos.x << "," << -apos.y << "," << x- 0.56*cos(phi)+0.56<< "," << -(y - 0.56*sin(phi))-0.56 << std::endl;
+//              << "," << bel[N_CONF-1].x + 0.56<< "," << -bel[N_CONF-1].y-0.56 << std::endl;
+        //}
 }
 
 conf MCLocalizor::getConfiguration() {

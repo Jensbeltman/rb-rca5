@@ -80,6 +80,8 @@ private:
 
     std::ofstream positions;
     int nfile = 0;
+
+    bool skipPrint = false;
 };
 
 #endif // MCLOCALIZER_H

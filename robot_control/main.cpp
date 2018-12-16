@@ -75,8 +75,8 @@ int main(int _argc, char **_argv) {
   node->Init();
 
 
-  gazebo::transport::SubscriberPtr cameraSubscriber =
-    node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
+  //gazebo::transport::SubscriberPtr cameraSubscriber =
+  //  node->Subscribe("~/pioneer2dx/camera/link/camera/image", cameraCallback);
 
   //gazebo::transport::SubscriberPtr toPoint =
   //        node->Subscribe("~/pose/info", &MoveToPoint::displayGoal, &testGoal);
@@ -133,7 +133,6 @@ int main(int _argc, char **_argv) {
   int goalIndex = 0;
 
   testGoal.setGoal(goals[goalIndex].first, goals[goalIndex].second);
-  goalIndex++;
 
     bool obstacleOn = false;
 
@@ -156,14 +155,17 @@ int main(int _argc, char **_argv) {
     distAndAngle goal = testGoal.leftToGoal(configuration.x/4, configuration.y/4, configuration.dir);
     closestLine scan = scanner.getClosestLine();
 
-    std::cout << "Goal distance: " << goal.distance << " Goal angle: " << goal.angle << ", ";
+    //std::cout << "Goal distance: " << goal.distance << " Goal angle: " << goal.angle << ", ";
     //std::cout << "Scan distance: " << scan.distance << " Scan angle: " << scan.angle*360/(2*M_PI) << ", ";
 
     if (goal.distance < 2) {
-        testGoal.setGoal(goals[goalIndex].first, goals[goalIndex].second);
+        std::cout << "GoalIndex: " << goalIndex << std::endl;
         if (++goalIndex == (int)goals.size()) {
-          goalIndex = 0;
+            std::cout << "Done. GoalIndex: " << goalIndex << " Goals vector size: " << goals.size() << std::endl;
+            break;
+            goalIndex = 0;
         }
+        testGoal.setGoal(goals[goalIndex].first, goals[goalIndex].second);
     }
 
     if (scan.distance2 < 1) {
@@ -174,13 +176,13 @@ int main(int _argc, char **_argv) {
     }
 
     if (obstacleOn) {
-        std::cout << "O" << std::endl;
+        //std::cout << "O" << std::endl;
         controller1.setValues(scan.distance, scan.angle);
         controller1.process();
         speed = controller1.getValues().speed;
         dir = controller1.getValues().direction;
     } else {
-        std::cout << "G" << std::endl;
+        //std::cout << "G" << std::endl;
         controller2.setValues(goal.distance, -goal.angle);
         controller2.process();
         speed = controller2.getValues().speed;
